@@ -1,0 +1,1668 @@
+@font-face {
+	font-family: 'EsoFontStyle';
+	src: url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.eot');
+	src: url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.eot?#iefix') format('embedded-opentype'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.woff2') format('woff2'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.woff') format('woff'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.ttf') format('truetype'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.svg#esofontregular') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'EsoFontStyle';
+	src: url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.eot');
+	src: url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.eot?#iefix') format('embedded-opentype'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.woff2') format('woff2'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.woff') format('woff'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.ttf') format('truetype'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.svg#esofontbold') format('svg');
+	font-weight: bold;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'EsoFontStyleAlt';
+	src: url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.eot');
+	src: url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.eot?#iefix') format('embedded-opentype'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.woff2') format('woff2'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.woff') format('woff'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.ttf') format('truetype'),
+		url('//esobuilds-static.uesp.net/resources/esofontregular-webfont.svg#esofontregular') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'EsoFontStyleAlt';
+	src: url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.eot');
+	src: url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.eot?#iefix') format('embedded-opentype'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.woff2') format('woff2'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.woff') format('woff'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.ttf') format('truetype'),
+		url('//esobuilds-static.uesp.net/resources/esofontbold-webfont.svg#esofontbold') format('svg');
+	font-weight: bold;
+	font-style: normal;
+}
+
+#esotbRoot {
+	height: auto;
+	overflow: hidden;
+	min-width: 1075px;
+}
+
+#esotbFooter {
+	color: #777;
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+#esotbFooter a {
+	text-decoration: none;
+	color: #6666ff;
+}
+
+#esotbFooter a:visited {
+	text-decoration: none;
+	color: #996699;
+}
+
+.esotbUpdateDate {
+	color: #777;
+	font-style: italic;
+}
+
+#esotbAttributes {
+	text-align: center;
+}
+
+.esotbAttrLabel {
+	width: 60px;
+	text-align: right;
+	font-weight: bold;
+	display: inline-block;
+}
+
+.esotbStatLabel {
+	width: 125px;
+	text-align: right;
+	font-weight: bold;
+	display: inline-block;
+	padding: 5px;
+	padding-right: 0;
+}
+
+.esotbAttrTitle {
+	background-color: #E3d5c0;
+	font-weight: bold;
+	text-align: center;
+	padding: 3px;
+	margin: 3px;
+    margin-top: 15px;
+}
+
+.esotbAttributeInput, .esotbLevelInput {
+	font-weight: normal;
+	display: inline-block;
+	width: 50px;
+}
+
+#esotbStatInputs {
+	padding: 7px;
+	width: auto;
+	overflow: hidden;
+	float: none !important;
+	min-width: 745px;
+}
+
+#esotbStatList {
+    float: right;
+	width: 300px;
+	padding: 7px;
+	display: inline-block;
+}
+
+.esotbStatTitle {
+	width: 100%;
+	font-size: 16px;
+	font-weight: bold;
+	margin: 5px;
+	border-bottom: solid 1px gray;
+}
+
+.esotbBlockClear {
+	float: none;
+	clear: both;
+}
+
+.esotbStatRow {
+	padding: 3px;
+	position: relative;
+}
+
+.esotbStatRow:hover {
+	background-color: #FFFFF0;
+	cursor: pointer;
+}
+
+.esotbStatName {
+	width: 200px;
+	text-align: left;
+	font-weight: bold;
+	display: inline-block;
+}
+
+.esotbStatValue {
+	width:75px;
+	text-align: left;
+	font-weight: bold;
+	display: inline-block;
+}
+
+.esotbStatComputeValue {
+	width: 50px;
+	display: inline-block;
+	font-family: monospace;
+	font-size: 12px;
+	text-align: left;
+	margin-left: 25px;
+}
+
+.esotbComputeItems:hover {
+	cursor: pointer;
+}
+
+.esotbStatComputeItem {
+	font-family: monospace;
+	font-size: 11px;
+	text-align: left;
+	width: 215px;
+	display: inline-block;
+}
+
+.esotbStatComputeButton,
+.esotbStatDetailsButton {
+	width: 16px;
+	height: 16px;
+	background-color: #DBBFA5;
+	text-align: center;
+	border-top: 1px solid #CCCCCC;
+	border-right: 1px solid #333333;
+	border-bottom: 1px solid #333333;
+	border-left: 1px solid #CCCCCC;
+	position: absolute;
+	right: 2px;
+	top: 2px;
+}
+
+.esotbStatWarningButton,
+.esotbStatNoteButton {
+	width: 14px;
+	height: 16px;
+	background-color: #ff9999;
+	text-align: center;
+	border: solid 1px gray;
+	position: absolute;
+	right: 22px;
+	top: 2px;
+	border-radius: 5px;
+	padding-right: 2px;
+}
+
+.esotbStatNoteButton {
+	background-color: #ffff99;
+}
+
+.esotbStatWarningButton:hover,
+.esotbStatNoteButton:hover {
+	cursor: pointer;
+	background-color: #cc3333;
+}
+
+.esotbStatComputeButton:hover,
+.esotbStatDetailsButton:hover {
+	cursor: pointer;
+	background-color: #777;
+}
+
+.esotbItem {
+	vertical-align: middle;
+	line-height: 48px;
+	display: inline-block;
+	width: 240px;
+	position: relative;
+}
+
+.esotbItem:hover {
+}
+
+.esotbItemIcon {
+	width: 48px;
+	height: 48px;
+	display: inline-block;
+	background-color: #ccc;
+	vertical-align: middle;
+	cursor: pointer;
+	border: solid 2px transparent;
+	margin: 2px;
+}
+
+.esotbItemIcon:hover {
+	border: solid 2px black;
+}
+
+.esotbItemLabel {
+	font-weight: normal;
+	display: inline-block;
+	vertical-align: top;
+	width: 180px;
+    top: 22px;
+    position: relative;
+	line-height: 1.1em;
+    max-height: 50px;
+    overflow: hidden;
+}
+
+#esotbClickWall {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 20;
+	background-color: rgba(0,0,0,0.5);
+}
+
+#esotbFormulaPopup {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 750px;
+	margin-top: -250px;
+	margin-left: -375px;
+	z-index: 40;
+	border: solid 2px gray;
+	background-color: #FBEFD5;
+	padding: 7px;
+	text-align: center;
+    font-size: 13px;
+	box-shadow: rgba(0,0,0,0.5) 4px 4px 5px 2px;
+}
+
+#esotbFormulaTitle {
+	text-align: center;
+	font-size: 16px;
+	font-weight: bold;
+	width: 100%;
+	margin-bottom: 10px;	
+}
+
+#esotbFormulaNote {
+	padding: 7px;
+    background-color: #ffff99;
+    margin-bottom: 7px;
+}
+
+#esotbFormulaName {
+	font-family: monospace;
+	font-size: 14px;
+	display: inline;
+}
+
+#esotbFormula {
+	font-family: monospace;
+	font-size: 14px;
+	display: inline;
+}
+
+#esotbFormulaCloseButton {
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	width: 16px;
+	height: 16px;
+	background-color: #DBBFA5;
+	text-align: center;
+	vertical-align: middle;
+	border-top: 1px solid #CCCCCC;
+	border-right: 1px solid #333333;
+	border-bottom: 1px solid #333333;
+	border-left: 1px solid #CCCCCC;
+}
+
+#esotbFormulaCloseButton:hover {
+	background-color: #888;
+	cursor: pointer;
+}
+
+#esotbFormulaBottomNote {
+	margin-top: 10px;
+	color: #777;
+	font-style: italic;
+	text-align: left;
+}
+
+#esotbRace, #esotbClass, #esotbMundus, #esotbMundus2 {
+	margin-top: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.esotbStatTab {
+	display: inline-block;
+	width: 75px;
+	padding: 3px;
+	border: solid 1px gray;
+	padding 4px;
+	text-align: center;
+	vertical-align: middle;
+	font-weight: normal;
+	font-size: 14px;
+	border-bottom: none;
+	border-radius: 4px 4px 0px 0px;
+	position: relative;
+    top: 1px;
+}
+
+.esotbStatTab:hover {
+	background-color: #ccc;
+	cursor: pointer;
+}
+
+.esotbStatTabSelected {
+	background-color: #FBEFD5;
+	font-weight: bold;
+}
+
+.esotbStatTabSpacer {
+	display: inline-block;
+	width: 10px;
+}
+
+.esotbStatBlock {
+	min-width: 400px;
+	min-height: 200px;
+	border: solid 1px gray;
+	border-radius: 4px;
+	padding: 8px;
+}
+
+/* Start CP Overrides */
+#esotbRoot .esovcpSkill {
+	font-size: 16px;
+	margin-bottom: 5px;
+	margin-left: 10px;
+}
+
+#esotbRoot .esovcpSkillDesc {
+	font-size: 12px;
+	max-width: 600px;
+	vertical-align: middle;
+	display: inline;
+	margin-left: 4px;
+}
+
+#esotbRoot #esovcpContainer {
+	margin-top: 10px;
+	font-family: arial;
+}
+    
+#esotbRoot .esovcpDiscipline {
+	height: 25px;
+	line-height: 25px;
+	font-size: 16px;
+	vertical-align: middle;
+}     
+
+#esotbRoot .esovcpDiscAttrPoints {
+    height: 72px;
+    padding-top: 45px;
+    font-size: 20px;
+    font-size: 16px;
+}
+
+#esotbRoot #esovcpSkills {
+    margin-left: 220px;
+}
+
+#esotbRoot .esovcpTotalPoints {
+	font-size: 18px;
+}
+
+#esotbRoot .esovcpDiscPoints {
+	font-size: 14px;
+}
+
+#esotbRoot .esovcpDiscSkillTitle {
+	font-size: 22px;
+}
+
+#esotbRoot .esovcpDiscTitlePoints {
+	font-size: 18px;
+}
+
+#esotbRoot .esovcpSkillLevel {
+	font-size: 13px;
+}
+/* End CP Overrides */
+
+.esotbTargetInput {
+	width: 75px;
+}
+
+.esotbMiscInput {
+	width: 75px;
+}
+
+.esotbInputValueRO {
+	display: inline-block;
+	border: solid 1px gray;
+	background-color: lightgray;
+    padding: 1px;
+    padding-bottom: 0px;
+	margin-top: 3px;
+	min-width: 50px;
+}
+
+.eso_item_link_q1 { color: #fff !important; }
+
+.esotbItemSlotLabel {
+	width: 50px;
+	text-align: right;
+	font-weight: bold;
+	display: inline-block;
+	display: none;
+	padding: 5px;
+}
+
+#esotbItemDetailsPopup {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 600px;
+	margin-top: -300px;
+	margin-left: -300px;
+	z-index: 40;
+	border: solid 2px gray;
+	background-color: #FBEFD5;
+	padding: 7px;
+	text-align: center;
+	font-size: 13px;
+	box-shadow: rgba(0,0,0,0.5) 4px 4px 5px 2px;
+	max-height: 500px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.esotbSkillDetailsCoef {
+	text-align: left;
+	margin-left: 15px;
+	margin-top: 5px;
+}
+
+.esotbSkillDetailsOther {
+	text-align: left;
+	margin-left: 15px;
+	width: 45%;
+	display: inline-block;
+	margin-top: 5px;
+}
+
+#esotbItemDetailsPopup h4 {
+	text-align: left;
+	font-size: 14px;
+	font-weight: bold;
+	padding: 3px;
+	margin: 0;
+	margin-top: 5px;
+	border-bottom: solid 1px gray;
+	font-family: "Arial", sans-serif;
+}
+
+#esotbItemDetailsTitle {
+	text-align: center;
+	font-size: 16px;
+	font-weight: bold;
+	width: 100%;
+	margin-bottom: 10px;	
+}
+
+#esotbItemDetailsText {
+}
+
+#esotbItemDetailsCloseButton {
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	width: 16px;
+	height: 16px;
+	background-color: #DBBFA5;
+	text-align: center;
+	vertical-align: middle;
+	border-top: 1px solid #CCCCCC;
+	border-right: 1px solid #333333;
+	border-bottom: 1px solid #333333;
+	border-left: 1px solid #CCCCCC;
+}
+
+#esotbItemDetailsCloseButton:hover {
+	background-color: #888;
+	cursor: pointer;
+}
+
+.esotbItemDetailsButton {
+	position: absolute;
+	left: 75px;
+	top: 0px;
+}
+
+.esotbItemDetailsButton:hover {
+	cursor: pointer;
+	background-color: #777;	
+}
+
+.esotbItemDisableButton {
+	position: absolute;
+	left: 55px;
+	top: 0px;
+}
+
+.esotbItemDisableButton:hover {
+	cursor: pointer;
+	background-color: #777;	
+}
+
+#esotbFormulaInputs {
+	margin-top: 10px;
+	text-align: left;
+	margin-left: 25px;
+}
+
+.esotbFormInputName, 
+.esotbFormInputResult {
+	display: inline-block;
+	width: 240px;
+	text-align: right;
+	margin-right: 10px;
+	font-family: monospace;
+}
+
+.esotbFormInputResult {
+	font-weight: bold;
+}
+
+.esotbFormInputInputResult {
+	font-weight: bold;
+	background-color: #ccc;
+}
+
+#esotbFormInputResultSuffix {
+	display: inline-block;
+}
+
+#esotbFormInputResultCapValue {
+	display: inline-block;
+	margin-left: 24px;
+}
+
+.esotbItemButton {
+	width: 16px;
+	height: 16px;
+	background-color: #DBBFA5;
+	text-align: center;
+	border-top: 1px solid #CCCCCC;
+	border-right: 1px solid #333333;
+	border-bottom: 1px solid #333333;
+	border-left: 1px solid #CCCCCC;
+	line-height: 16px;
+}
+
+.esotbItemEnchantButton {
+	position: absolute;
+	left: 95px;
+	top: 0px;
+}
+
+.esotbItemEnchantButton:hover {
+	cursor: pointer;
+	background-color: #777;	
+}
+
+.esotbItem:hover:after {
+	background: #eeeeaa;
+    border-radius: 5px;
+    border: solid 1px gray;
+    color: #000;
+    content: attr(slotid);
+    left: -20px;
+    top: -5px;
+    padding: 3px;
+    position: absolute;
+    z-index: 98;
+    font-size: 13px;
+    font-weight: normal;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    line-height: 1em;
+    display: none;
+}
+
+.esotbItemEnchantButton:hover:after {
+    background: #eeeeaa;
+    border-radius: 5px;
+    border: solid 1px gray;
+    bottom: 18px;
+    color: #000;
+    content: "Enchant...";
+    left: 20%;
+    padding: 3px;
+    position: absolute;
+    z-index: 98;
+    font-size: 13px;
+    font-weight: normal;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+}
+
+.esotbItemDetailsButton:hover:after {
+    background: #eeeeaa;
+    border-radius: 5px;
+    border: solid 1px gray;
+    bottom: 18px;
+    color: #000;
+    content: "View Item Details...";
+    left: 20%;
+    padding: 3px;
+    position: absolute;
+    z-index: 98;
+    font-size: 13px;
+    font-weight: normal;
+    white-space: nowrap;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+
+.esotbItemDisableButton:hover:after {
+    background: #eeeeaa;
+    border-radius: 5px;
+    border: solid 1px gray;
+    bottom: 18px;
+    color: #000;
+    content: "Disable item...";
+    left: 20%;
+    padding: 3px;
+    position: absolute;
+    z-index: 98;
+    font-size: 13px;
+    font-weight: normal;
+    white-space: nowrap;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+
+.esotbItemDisabled .esotbItemDisableButton:hover:after {
+	content: "Enable item...";
+}
+
+.esotbWeaponSelect {
+	background-color: #99ffff;
+}
+
+#esotbWeaponBar1:hover,
+#esotbWeaponBar2:hover {
+	cursor: pointer;
+	background-color: #ffff99;
+}
+
+button.esotbWeaponSelect {
+	background-color: #ccc;
+	opacity: 0.65; 
+  	cursor: not-allowed;
+}
+
+.esotbWeaponSelect1, .esotbWeaponSelect2 {
+	cursor: pointer;
+}
+
+#esotbRawInputs {
+
+}
+
+.esotbRawInputItem {
+	
+}
+
+.esotbRawInputName {
+	display: block;
+	font-weight: bold;
+	margin-top: 5px;
+	padding: 3px;
+}
+
+.esotbRawInputValue {
+	display: block;
+	margin-left: 50px;
+	padding: 1px;
+}
+
+#esotbSets {
+	margin-top: 20px;
+}
+
+.esotbStatBlock h3 {
+	font-size: 16px;
+	font-family: "Arial", sans-serif;
+}
+
+.esotbStatBlock h4
+{
+	margin: 3px;
+	margin-top: 12px;
+	font-size: 14px;
+	font-family: "Arial", sans-serif;
+}
+
+.esotbSetInfoSet {
+	margin-left: 25px;
+}
+
+.esotbSetInfoRow {
+	margin-left: 50px;
+    padding: 2px;
+}
+
+.esotbToggledSetItem,
+.esotbToggledSkillItem,
+.esotbToggledCpItem {
+	margin: 4px;
+	margin-left: 20px;
+    padding: 5px;
+    border-radius: 15px;
+}
+
+.esotbToggledSkillSelect {
+	background-color: #f5deb3;
+	border-radius: 15px;
+}
+
+.esotbToggledSetSelect,
+esotbToggledCpSelect {
+	background-color: #f5deb3;
+	border-radius: 15px;
+}
+
+.esotbToggledSetItem:hover,
+.esotbToggledSkillItem:hover,
+.esotbToggledCpItem:hover {
+	border-radius: 15px;
+	background-color: #E3d5c0;
+	box-shadow: 0px 0px 6px rgba(0,0,0,0.7);
+	cursor: pointer;
+}
+
+.esotbToggleSetTitle,
+.esotbToggleSkillTitle,
+.esotbToggleCpTitle {
+	display: inline-block;
+	font-weight: bold;
+    font-size: 15px;
+}
+
+.esotbToggleSetDesc,
+.esotbToggleSkillDesc,
+.esotbToggleCpDesc {
+	display: inline;
+	vertical-align: middle;
+}
+
+#esotbItems {
+	margin-left: 5px;
+}
+
+#esotbItemHead {
+	left: 150px;
+}
+
+/* Skills override */
+#esotbRoot .esovsAbilityBlockName {
+	width: 250px;
+	overflow: hidden;
+}
+
+#esotbRoot .esovsSkillContentTitle {
+}
+
+#esotbRoot .esovsAbilityBlockIconLevel {
+    font-size: 13px;
+	line-height: 13px;
+	bottom: 1px;
+    right: 1px;
+}
+
+#esotbRoot .esovsAbilityBlockIcon {
+    border: solid 2px transparent;	
+}
+
+#esotbRoot .esovsAbilityBlockIcon:hover {
+	border: solid 2px yellow;
+} 
+
+#esotbRoot #esovsSkillContent {
+	width: 550px;
+}
+
+#esotbRoot .esovsSkillLineResetAll {
+	float: right;
+}
+
+#esotbRoot .esovsSkillLinePurchaseAll {
+	float: right;
+}
+
+#esotbRoot .esovsSkillContentBlock {
+	height: 700px;
+	overflow: auto;
+	padding-left: 20px;
+	position: relative;
+}
+
+#esotbRoot .esovsAbilityBlock  {
+	padding: 0px;
+}
+
+#esotbRoot .esovsAbilityBlockDesc {
+	display: none;
+}
+
+#esotbRoot .esovsAbilityBlockTitle {
+	margin-top: 5px;
+}
+
+#esotbRoot .esovsAbilityBlockList {
+    padding: 5px;
+    margin-right: 10px;
+	margin-bottom: 5px;
+}
+
+#esotbRoot .esovsAbilityBlockIcon,
+#esotbRoot .esovsAbilityBlockPassiveIcon,
+#esotbRoot .esovsAbilityBlockList .esovsAbilityBlockIcon,
+#esotbRoot .esovsAbilityBlockList .esovsAbilityBlockPassiveIcon {
+	width: 34px;
+	height: 34px;
+}
+
+#esotbRoot .esovsAbilityBlockIcon img,
+#esotbRoot .esovsAbilityBlockPassiveIcon img,
+#esotbRoot .esovsAbilityBlockList .esovsAbilityBlockIcon img,
+#esotbRoot .esovsAbilityBlockList .esovsAbilityBlockPassiveIcon img
+ {
+	width: 32px;
+	height: 32px;	
+	margin-top: 1px;
+	margin-left: 1px;
+}
+
+#esotbRoot .esovsAbilityBlockTitleLabel {
+	line-height: 32px;
+}
+
+#esotbRoot .esovsAbilityBlockPlus,
+#esotbRoot .esovsAbilityBlockPlusSelect {
+	margin-top: 6px;
+	margin-left: 10px;
+}
+
+#esotbRoot .esovsAbilityBlockIcon[draggable='true']{
+	cursor: move;
+}
+
+#esotbRoot .esovsAbilityBlockTitleLabel {
+	position: relative;
+}
+/* End of Skills override */
+
+
+#esotbRaceList,
+#esotbClassList {
+	display: inline-block;
+}
+
+.esotbToggleSkillNumber,
+.esotbToggleSetNumber,
+.esotbToggleCpNumber,
+.esotbToggleBuffNumber {
+	width: 50px;
+	margin-right: 10px;
+}
+
+.esotbBuffTitle {
+	display: inline-block;
+	font-size: 15px;
+	font-weight: bold;
+	margin-right: 10px;
+	vertical-align: top;
+}
+
+.esotbBuffCheck {
+	vertical-align: top;
+}
+
+.esotbBuffDesc {
+	display: inline-block;
+	vertical-align: top;
+	padding-left: 20px;
+}
+
+.esotbBuffItem {
+	padding: 4px;
+	margin: 3px;
+	margin-left: 25px;
+}
+
+.esotbBuffItem:hover {
+	border-radius: 15px;
+	background-color: #E3d5c0;
+	box-shadow: 0px 0px 6px rgba(0,0,0,0.7);
+	cursor: pointer;
+}
+
+.esotbBuffDisable,
+.esotbBuffDisable:hover {
+	background-color: #ccf !important;
+    border-radius: 15px !important;
+    color: #000 !important;
+}
+
+.esotbBuffItemSelect {
+	background-color: #f5deb3;
+	border-radius: 15px;
+}
+
+.esotbBuffSkillEnable {
+	margin-left: 10px;
+	display: inline-block;
+}
+
+.esotbBuffIcon {
+	width: 24px;
+	height: 24px;
+	display: inline-block;
+	vertical-align: top;
+	padding: 2px;
+	padding-right: 7px;	
+}
+
+.esotbItemDisabled {
+	opacity: 0.5;
+}
+
+.esotbHelpWarning {
+	background-color: #ffff99;
+	padding: 10px;
+}
+
+.esotbHelpWorkBlock {
+	display: inline-block;
+	width: 32%;
+	vertical-align: top;
+}
+
+#esotbStatBlockHelp {
+	line-height: 1.6em;
+}
+
+#esotbStatBlockHelp ul
+{
+	margin-top: 2px;
+}
+
+.esotbSkillDetailsButton {
+	position: absolute;
+	left: 475px;
+	top: 7px;
+	font-family: arial, sans-serif;
+	font-weight: normal;
+	font-size: 13px;
+}
+
+.esotbSkillDetailsButton:hover {
+	background-color: #aaa;
+	cursor: pointer;
+}
+
+.esotbSkillDetailsDesc {
+	text-align: center;
+	margin: 10px;
+	margin-left: 20px;
+	margin-right: 20px;
+	padding: 5px;
+	background-color: rgba(150,150,150,0.3);
+	border-radius: 5px;
+}
+
+#esotbVampireStage,
+#esotbWerewolfStage, 
+#esotbAlliance {
+	margin-top: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+#esotbButtons {
+	float: right;
+}
+
+#esotbSaveButton,
+#esotbCreateCopyButton,
+#esotbDeleteButton {
+	margin-left: 15px;
+}
+
+#esotbSaveResults {
+	margin-left: 15px;
+	padding: 3px;
+	width: 200px;
+	height: 31px;
+	overflow: hidden;
+    line-height: 1.2em;
+}
+
+#esotbTrail {
+	position: relative;
+	top: -4px;
+	left: 0px;	
+}
+
+.esotbInputSize1 {
+	width: 200px;
+}
+
+.esotbInputSize2 {
+	width: 196px;
+}
+
+.esotbInputSize3 {
+	width: 83px;
+}
+
+#esotbStealth {
+    margin-right: 183px;	
+}
+
+.esotbStatDivider {
+	border-bottom: solid 1px #aaa;
+    margin-bottom: 3px;
+}
+
+.esotbStatDividerLite {
+    border-bottom: 1px solid #edd;
+    padding-bottom: 1px;
+    margin-bottom: 1px;
+}
+
+.esotbItemSetupTitle {
+	font-weight: bold;
+	display: inline-block;
+}
+
+#esotbRoot h3, #esotbRoot h4 {
+	font-family: "Arial", sans-serif;
+}
+
+.esptbItemSetup {
+	padding: 7px;
+}
+
+ .esptbItemSetup button {
+ 	margin-left: 20px;
+}
+
+#esotbItemSkillCopy {
+    font-family: "EsoFontStyleAlt", "Arial", sans-serif;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    white-space: nowrap;
+    width: 580px;
+}
+
+.esotbItemSetupTitle {
+	width: 150px;
+	text-align: right;
+}
+
+.esptbItemSetup select {
+	width: 110px;
+}
+
+.esotbItemSetupMsg {
+	display: inline-block;
+	padding-left: 20px;
+}
+
+#esotbWeaponBar2, #esotbFoodDrinkBar {
+	display: inline-block;
+}
+
+.esotbItemTransmute {
+	position: absolute;
+	top: -15px;
+	left: 117px;
+	height: 18px;
+}
+
+.esotbItemTransmuteList:hover {
+	background-color: #fBdFc5;
+	cursor: pointer;
+}
+
+.esotbItemTransmuteList {
+	display: inline-block;
+	font-size: 0.9em;
+	outline: 0px;
+    background-color: #DBBFA5;
+    height: 18px;
+    border-top: 1px solid #CCCCCC;
+    border-right: 1px solid #333333;
+    border-bottom: 1px solid #333333;
+    border-left: 1px solid #CCCCCC;
+}
+
+.esotbItemTransmuteIcon {
+	width: 16px;
+	height 16px;
+	display: inline-block;
+}
+
+#esotbBuildDescription {
+    width: 600px;
+    display: inline-block;
+    vertical-align: top;	
+}
+
+.esotbMitigationTable {
+	border: 1px #aaa solid;
+    border-collapse: collapse;
+}
+
+.esotbMitigationTable > tr > th, 
+.esotbMitigationTable > tr > td, 
+.esotbMitigationTable > * > tr > th, 
+.esotbMitigationTable > * > tr > td {
+    border: 1px #aaa solid;
+    padding: 0.2em;
+    width: 75px;
+	text-align: center;
+}
+
+.esotbMitigationTable > tr > td:hover,
+.esotbMitigationTable > * > tr > td:hover {
+	cursor: pointer;
+	background-color: #ccc;
+}
+
+#esotbMitigationDetails {
+   border-radius: 5px;
+   border: 1px solid gray;
+}
+
+#esotbMitigationDetails p {
+	padding: 5px;
+}
+
+.esotbMitRawDataTitle {
+	display: inline-block;
+	text-align: right;
+	width: 300px;
+	font-weight: bold;
+}
+
+.esotbMitRawDataHeader {
+	font-weight: bold;
+	background-color: lightgray;
+	border-radius: 4px 4px 0 0;
+    padding: 3px;
+}
+
+.esotbMitTableSelected {
+	background-color: yellow;
+}
+
+.esotbMitRawDataCumulative {
+	color: #777;
+	display: inline-block;
+}
+
+.esotbBuffGroup {
+	border-bottom: solid 1px lightgray;
+	font-weight: bold;
+	font-size: 16px;
+	margin-top: 10px;
+}
+
+.esotbBuffDisabled {
+    pointer-events: none;
+    opacity: 0.5;
+    background: #CCC;
+}
+
+#esotbDeleteButton {
+	background-color: #fcc;
+}
+
+.esotbStatSection {
+	border: solid 1px #ccc;
+}
+
+.esotbStatSectionTitle {
+	background-color: #E3d5c0;
+    border-top: 1px solid #CCCCCC;
+    border-right: 1px solid #333333;
+    border-bottom: 1px solid #333333;
+    border-left: 1px solid #CCCCCC;
+    text-align: center;
+}
+
+.esotbStatSectionTitle:hover {
+	background-color: #FFFFF0;
+	cursor: pointer;
+}
+
+#esotbCombatRoot {
+	counter-reset: esocombatitem 0;
+}
+
+.esotbCombatBlock {
+	counter-increment: esocombatitem;
+	padding: 3px;
+	border-radius: 10px;
+}
+
+.esotbCombatBlock:hover {
+	background-color: #E3d5c0;
+	cursor: pointer;
+	box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+}
+
+.esotbCombatBlockHover {
+}
+
+.esotbCombatBlockHighlight {
+	background-color: #ffff99;
+	box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+} 
+
+.esotbCombatDisable {
+	pointer-events: none;
+}
+
+.esotbCombatBlockDragging {
+	background-color: #E3d5c0;
+	box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+}
+
+.esotbCombatNoHover {
+	background-color: unset !important;
+	cursor: unset !important;
+	color: unset !important;
+	box-shadow: unset !important;
+}
+
+.esotbCombatBlock:before {
+	content: counter(esocombatitem) ".";
+	margin-right: 5px;
+	width: 1.2em;
+	text-align: center;
+	display: inline-block;
+	font-family: "EsoFontStyleAlt","Arial",sans-serif;
+	display: inline-block;
+	color: black;
+	font-size: 16px;
+	vertical-align: middle;
+}
+
+.esovsCombatSkillIcon {
+	display: inline-block;
+	width: 34px;
+	height: 34px;
+	vertical-align: middle;
+	text-align: center;
+	background-color: black;
+	position: relative;
+}
+
+.esovsCombatSkillIcon:after {
+	background-image: url(//esolog-static.uesp.net/resources/eso_ability_frame.png?2e313);
+	background-size: 100% 100%;
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+.esovsCombatSkillIcon img {
+	width: 32px;
+	height: 32px;
+	left: 0px;
+	top: 1px;
+	position: relative;
+	background-color: black;
+}
+
+.esovsCombatSkillName {
+	display: inline-block;
+	width: 300px;
+	overflow: hidden;
+	font-family: "EsoFontStyleAlt","Arial",sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+	color: #000000;
+	vertical-align: middle;
+}
+
+.esotbCombatAddSlot {
+	margin: 5px;
+	border-radius: 10px;
+	display: inline-block;
+}
+
+.esotbCombatAddSlot:hover, .esotbCombatAddSlotHover {
+	background-color: #E3d5c0;
+	cursor: pointer;
+	box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+}
+
+.esotbCombatAddSlot img {
+	vertical-align: middle;
+}
+
+#esotbCombatSkillCopy, #esotbCombatUniqueSkills {
+	font-family: "EsoFontStyleAlt", "Arial", sans-serif;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	white-space: nowrap;
+}
+
+.esotbCombatUniqueSkillBar {
+	border: solid 2px rgba(0,0,0,0);
+	padding: 2px;
+	text-align: left;
+}
+
+
+.esovsCombatSkillBarItem {
+	display: inline-block;
+	width: 68px;
+	height: 68px;
+	background-image: url(//esolog-static.uesp.net/resources/eso_ability_frame.png?2e313);
+	background-size: 100% 100%;
+	vertical-align: middle;
+	text-align: center;
+	background-color: black;
+}
+
+#esotbCombatLog {
+	background: #fff3e3;
+	border: inset 2px;
+	padding: 4px;
+	height: 480px;
+	overflow: auto;
+	margin: 5px;
+}
+
+#esotbCombatLog p {
+	line-height: 1.1em;
+}
+
+#esotbCombatTopArea {
+	overflow: hidden;
+	display: table;
+	max-height: 600px;
+}
+
+#esotbCombatPlayerActions {
+	min-width: 400px;
+	max-height: 600px;
+	overflow: auto;
+	padding: 5px;
+}
+
+#esotbCombatStats {
+	width: 50%;
+	display: table-cell;
+	padding: 5px;
+}
+
+#esotbCombatBuffs {
+	min-width: 300px;
+	max-height: 600px;
+	overflow: auto;
+	padding: 5px;
+	width: 300px;
+	float: right;
+}
+
+.esotbCombatBuffTitle {
+	font-weight: bold;
+	font-size: 14px;
+	border-bottom: 1px solid #999;
+	padding-top: 10px;
+}
+
+#esotbCombatStat {
+	width: 100%;
+}
+
+.esotbCombatStatLabel {
+	text-align: right;
+	width: 150px;
+	display: inline-block;
+}
+
+.esotbCombatStatBold {
+	font-weight: bold;
+}
+
+.esotbCombatStatValue {
+	text-align: left;
+	width: 180px;
+	display: inline-block;
+	margin-left: 5px;
+}
+
+.esotbCombatWaitAction {
+	width: 60px;
+	text-align: right;
+	font-family: "EsoFontStyleAlt","Arial",sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.esotbCombatPotionAction {
+	max-width: 225px;
+	text-align: right;
+	font-family: "EsoFontStyleAlt","Arial",sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+#esotbCombatSkillCopy .esovsSkillBarHighlight {
+	width: 600px;
+}
+
+.esotbCombatTab {
+	display: inline-block;
+	width: 75px;
+	padding: 3px;
+	border: solid 1px gray;
+	padding 4px;
+	text-align: center;
+	vertical-align: middle;
+	font-weight: normal;
+	font-size: 14px;
+	border-bottom: none;
+	border-radius: 4px 4px 0px 0px;
+	position: relative;
+    top: 1px;
+}
+
+.esotbCombatTab:hover {
+	background-color: #ccc;
+	cursor: pointer;
+}
+
+.esotbCombatTabSelected {
+	background-color: #FBEFD5;
+	font-weight: bold;
+}
+
+.esotbCombatTabSpacer {
+	display: inline-block;
+	width: 10px;
+}
+
+.esotbCombatTabBlock {
+	min-width: 400px;
+	min-height: 200px;
+	border: solid 1px gray;
+	border-radius: 4px;
+	padding: 8px;
+}
+
+#esotbCombatTabs {
+	padding: 7px;
+	padding-top: 20px;
+	width: auto;
+	overflow: hidden;
+	float: none !important;
+	min-width: 745px;
+}
+
+.esotbCombatOptionLabel {
+	width: 200px;
+	text-align: right;
+	font-weight: bold;
+	display: inline-block;
+	padding: 5px;
+	padding-right: 0;
+}
+
+#esotbCombatFilterText {
+	margin-left: 5px;
+}
+
+.esotbCombatStatLabel2 {
+	text-align: right;
+	width: 300px;
+	display: inline-block;
+	font-weight: bold;
+}
+
+.esotbCombatStatValue2 {
+	text-align: left;
+	width: 400px;
+	display: inline-block;
+	margin-left: 5px;
+}
+
+.esotbCombatStatValue2:after {
+	content:"\a";
+	white-space: pre;
+}
+
+#esotbRoot .esovcpSkillMaxPoints {
+	font-size: 12px;
+}
+
+#esotbRoot .esovcp2Skills .esovcpSkill {
+	padding: 3px;
+	margin-bottom: 0px;
+}
+
+#esotbRoot #esovcpSkillEquipBar {
+	margin-left: 0;
+	text-align: center;
+}
+
+#esotbRoot .esotbStatBlock {
+	position: relative;
+}
+
+#esotbRoot #esovcpSearchBlockFloat {
+	position: absolute;
+	top: 80px;
+	text-align: right;
+}
+
+#esotbRoot #esovcpSearchText {
+	width: 120px;
+}
+
+#esotbRoot #esovcpSearchResult {
+	font-size: smaller;
+}
+
+#esotbRoot #esovsSearchText {
+	width: 150px;
+}
+
+#esotbRoot #esovsSearchBlockFloat {
+	position: absolute;
+	right: 0px;
+	top: 40px;
+	text-align: right;
+}
+
+#esotbRoot #esovsSearchResult {
+	font-size: smaller;
+}
+
+#esotbRoot #esovsLinkBlock {
+	display: none !important;
+}
+
+.esovsAbilityBlockCost {
+	float: right;
+	margin-right: 50px !important;
+}
+
+.esovsAbilityBlockList .esovsAbilityBlockCost {
+	float: right;
+	margin-right: 0px !important;
+}
+
+.esotbHeaderNote {
+	background-color: #cfc; 
+	border: 1px solid gray; 
+	margin-right: 270px; 
+	padding: 5px;
+}
+
+.esotbBuildNote {
+	background-color: #ffc;
+	margin-right: 270px;
+}
+
+.esotbNewVersion {
+	 background-color: #ffc;
+}
+
+.esovsAbilityScriptClassList {
+	background: #ddd;
+	cursor:no-drop;
+	pointer-events: none;
+	appearance: none;
+	width: 100px;
+}
+
+.esovsAbilityScript {
+	/* padding-left: 15px !important; */
+	width: 95% !important;
+}
+
+.esovsAbilityScriptSelected::before {
+	/* left: -10px !important; */
+}

@@ -1,0 +1,143 @@
+<div class='ecdHeader'>
+	{charMenu}
+	{editButtons}
+	{trail}
+</div>
+<div id='ecdRoot' {rootBackgroundImage}>
+	<div id='ecdBackgroundFocus' style='{backgroundFocusStyle}'>
+		<img src='{baseResourceUrl}resources/tradinghouse_browse_tabicon_down.png'>
+	</div>
+	<div id='ecdTitleBar'>
+		<div class='ecdLevelInfo'>
+				<div class='ecdLevelBar'>{levelTitle} <div class='ecdLevel'>{level}</div></div>
+				<div class='ecdChampionPoint'>CHAMPION POINTS <img src="//esolog.uesp.net/resources/champion_icon.png" width="24" height="24"> {championPoints}</div>
+				<div class='ecdAlliance'>{alliance} RANK {allianceRank}</div>
+		</div>
+		<div class='ecdCharDataName'>
+			<div class='ecdCharDataNameTitle'>{charName}</div>
+			<div class='ecdClassName'>{race} {class} ({buildType})</div>
+			<div class='ecdClassName'>{special}</div>
+		</div>
+		<div class='ecdAttributes'>
+			<div class='ecdAttributesBox'>
+				<div class='ecdAttributesMag'>{attrMag} Magicka</div>
+				<div class='ecdAttributesHea'>{attrHea} Health</div>
+				<div class='ecdAttributesSta'>{attrSta} Stamina</div>
+			</div>
+		</div>
+		<br />
+		<img class='ecdImageFlip' src='{baseResourceUrl}resources/eso_equip_bar.png' width='49%' height='5' /><img class='3' src='{baseResourceUrl}resources/eso_equip_bar.png' width='49%' height='5'/>
+	</div>
+	<div id='ecdRightData'>
+		<div id='ecdRightTitleBar'>
+			<div class='ecdSkillTitleButton ecdRightTitleButtonEnabled' id='ecdSkillsButton' onclick="OnEsoRightTitleClick('Skills', this);" style="padding-right: 20px;"><div title="Skills" class='ecdTopLevelIcon ecdTopLevelIcon_Skills'></div> SKILLS</div>
+			&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  
+			<div class='ecdSkillTitleButton ecdRightTitleButtonDisabled' id='ecdCPButton' onclick="OnEsoRightTitleClick('CP', this);" style="padding-right: 20px;"><div title="Champion Points" class='ecdTopLevelIcon ecdTopLevelIcon_CP'></div> CHAMPION POINTS</div>
+		</div>
+		<div id='ecdSkills' class='ecdRightDataArea'>
+			<img class='ecdImageFlip' src='{baseResourceUrl}resources/eso_equip_bar.png' width='290' /><img class='3' src='{baseResourceUrl}resources/eso_equip_bar.png' width='290' />
+			<div class='ecdSkillSubTitle' style="display:{skillPointDisplay};">Skill Points:</div> <div class='ecdSkillSubValue' style="display:{skillPointDisplay};">{skillPointsUnused} / {skillPointsTotal}</div><br />
+			<div class='ecdSkillSubTitle' style="display:{skyshardDisplay};">Skyshards:</div> <div class='ecdSkillSubValue' style="display:{skyshardDisplay};">{skyshards} / 3</div>
+			<div id='ecdSkillContents'>
+				{skillContents}
+			</div>
+			<div id='ecdSkillTree'>{skillTree}</div>
+		</div>
+		<div id='ecdCP' class='ecdRightDataArea {extraCPClass}' style="display: none;">
+				<img class='ecdImageFlip' src='{baseResourceUrl}resources/eso_equip_bar.png' width='49%' /><img class='' src='{baseResourceUrl}resources/eso_equip_bar.png' width='49%' />
+				{cpContents}
+		</div>
+	</div>
+	<div id='ecdEquipSlots'>
+		<div id='ecdEquipSlotTitle'>EQUIPMENT</div>
+		<img id='ecdEquipSlotBar1' alt='' src='{baseResourceUrl}resources/eso_equip_bar.png' width='350'/>
+		<div id='ecdEquipSlotSubtitle1'>APPAREL</div>
+		<div id='ecdEquipSlotHead'>{equipHead}</div>
+		<div id='ecdEquipSlotShoulder'>{equipShoulder}</div>
+		<img id='ecdEquipSlotFigure' src='{figureImage}' />
+		<div id='ecdEquipSlotChest'>{equipChest}</div>
+		<div id='ecdEquipSlotGlove'>{equipGlove}</div>
+		<div id='ecdEquipSlotBelt'>{equipBelt}</div>
+		<div id='ecdEquipSlotLeg'>{equipLeg}</div>
+		<div id='ecdEquipSlotFeet'>{equipFeet}</div>
+		<img id='ecdEquipSlotBar2' alt='' src='{baseResourceUrl}resources/eso_equip_bar.png' width='350' />
+		<div id='ecdEquipSlotSubtitle2'>ACCESSORIES</div>
+		<div id='ecdEquipSlotCostume' style="display:none;">{equipCostume}</div>
+		<div id='ecdEquipSlotNeck'>{equipNeck}</div>
+		<div id='ecdEquipSlotRing1'>{equipRing1}</div>
+		<div id='ecdEquipSlotRing2'>{equipRing2}</div>
+		<img id='ecdEquipSlotBar3' alt='' src='{baseResourceUrl}resources/eso_equip_bar.png' width='350' />
+		<div id='ecdEquipSlotSubtitle3'>WEAPONS</div>
+		<div id='ecdWeaponBar1' class='{activeWeaponClass1}'>
+			<div id='ecdEquipSlotWeapon11'>{equipWeapon11}</div>
+			<div id='ecdEquipSlotWeapon12'>{equipWeapon12}</div>
+			<div id='ecdEquipSlotPoison1'>{equipPoison1}</div>
+		</div>
+		<div id='ecdWeaponBar2' class='{activeWeaponClass2}'>
+			<div id='ecdEquipSlotWeapon21'>{equipWeapon21}</div>
+			<div id='ecdEquipSlotWeapon22'>{equipWeapon22}</div>
+			<div id='ecdEquipSlotPoison2'>{equipPoison2}</div>
+		</div>
+	</div>
+	<div id='ecdStatsandBuffs'>
+		<div id='ecdBasicStats'>
+			{basicStats}
+		</div>
+		<div id='ecdBuffs' class='ecdScrollContent'>
+			{buffs}
+		</div>
+	</div>
+	<div id='ecdBuildDescription'>
+		{BuildDescription}
+	</div>
+	<div id='ecdActionBar'>
+		<div class='ecdActionBar1 {activeBarClass1}' activeweaponbar="1">
+			<div class='ecdActionBarTitle'>Bar 1</div>
+			{action11}
+			{action12}
+			{action13}
+			{action14}
+			{action15}
+			&nbsp; &nbsp; &nbsp; &nbsp;
+			{action16}
+		</div>
+		<div class='ecdActionBar2 {activeBarClass2}' activeweaponbar="2">
+			<div class='ecdActionBarTitle'>Bar 2</div>
+			{action21}
+			{action22}
+			{action23}
+			{action24}
+			{action25}
+			&nbsp; &nbsp; &nbsp; &nbsp;
+			{action26}
+		</div>
+		<div class='ecdActionBar3 {activeBarClass3}' activeweaponbar="{activeBarIndex3}">
+			<div class='ecdActionBarTitle'>{actionBarTitle3}</div>
+			{action31}
+			{action32}
+			{action33}
+			{action34}
+			{action35}
+			&nbsp; &nbsp; &nbsp; &nbsp;
+			{action36}
+		</div>
+		<div class='ecdActionBar4 {activeBarClass4}' activeweaponbar="{activeBarIndex4}">
+			<div class='ecdActionBarTitle'>{actionBarTitle4}</div>
+			{action41}
+			{action42}
+			{action43}
+			{action44}
+			{action45}
+			&nbsp; &nbsp; &nbsp; &nbsp;
+			{action46}
+		</div>
+	</div>
+	<div class='ecdRawLink'><a href="{rawLink}">View Raw Data</a></div>
+	<div class='ecdCreateDate'>{editDateNote}</div>
+</div>
+
+<script type="text/javascript">
+	var g_EsoBuildStatData = {buildStatDataJson};
+	{setSkillData}
+</script>
+

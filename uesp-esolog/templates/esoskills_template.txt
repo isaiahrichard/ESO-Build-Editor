@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>UESP:ESO Skill Browser {versionTitle}</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoskills.css?26Nov2024" />
+		<link rel="stylesheet" href="//esolog.uesp.net/resources/esoskills_embed.css?26Nov2024" />
+		<script type="text/javascript" src="//esolog-static.uesp.net/resources/jquery-1.10.2.js"></script>
+		<script type="text/javascript" src='//esolog-static.uesp.net/resources/jquery-ui.min.js?version=28Mar2017'></script>
+		<script type="text/javascript" src='//esolog-static.uesp.net/resources/jquery.ui.touch-punch.min.js?version=28Mar2017'></script>
+		<script type="text/javascript" src="//esolog.uesp.net/resources/esoskills.js?26Nov2024"></script>
+		<script type="text/javascript" src="//esolog.uesp.net/resources/esoSkillTooltips.js?26Nov2024"></script>
+	</head>
+<body>
+<a href="/viewlog.php">Back to Home</a>
+<a id="esovsLinkBlock" class="esovsLinkBlock" href="" style="display: {menuBarDisplay};">Link to Skill</a>
+<div id="esovsSearchBlock" style="display: {menuBarDisplay};">
+	<input type="search" id="esovsSearchText" value="" size="30" />
+	<button id="esovsSearchButton">Find Skill</button>
+	<div id="esovsSearchResult">
+	</div>
+</div>
+<h1>UESP:ESO Skill Browser {versionTitle}</h1>
+<div id="esovsVersion">Showing skills for update {niceVersion}. Show data for update {versionList}</div>
+<div id="esovsLeftBlock" style="display: {leftBlockDisplay};">
+	<div id="esovsSkillTooltipRoot">
+		<div class='esovsSkillTooltip'>
+			<div class='esovsSkillTooltipDesc'>Loading skill data...</div>
+		</div>
+	</div>
+	<div id="esovsControls">
+		Use the controls below to set your character stats and update all skill tooltips. Click on any skill to
+		focus it in the above tooltip.
+		<p />
+		<form id="esovsAttributesForm" method="">
+		<div class="esovsRangeLabel">Level</div>
+		<input id="esovsInputLevel" class="esovsInputControl" type="text" value="{fmtLevel}">
+		<input id="esovsControlLevel"  class="esovsRangeControl" type="range" min="1" max="66" value="{level}">
+		<br />
+		<div class="esovsRangeLabel">Health</div>
+		<input id="esovsInputHealth" class="esovsInputControl" type="text" value="{health}">
+		<input id="esovsControlHealth"  class="esovsRangeControl" type="range" min="1" max="100000" value="{health}">
+		<br />
+		<div class="esovsRangeLabel">Magicka</div>
+		<input id="esovsInputMagicka" class="esovsInputControl" type="text" value="{magicka}">
+		<input id="esovsControlMagicka" class="esovsRangeControl" type="range" min="1" max="100000" value="{magicka}">
+		<br />
+		<div class="esovsRangeLabel">Stamina</div>
+		<input id="esovsInputStamina" class="esovsInputControl" type="text" value="{stamina}">
+		<input id="esovsControlStamina" class="esovsRangeControl" type="range" min="1" max="100000" value="{stamina}">
+		<br />
+		<div class="esovsRangeLabel">Spell Damage</div>
+		<input id="esovsInputSpellDamage" class="esovsInputControl" type="text" value="{spellDamage}">
+		<input id="esovsControlSpellDamage"  class="esovsRangeControl" type="range" min="1" max="10000" value="{spellDamage}">
+		<br />
+		<div class="esovsRangeLabel">Weapon Damage</div>
+		<input id="esovsInputWeaponDamage" class="esovsInputControl" type="text" value="{weaponDamage}">
+		<input id="esovsControlWeaponDamage" class="esovsRangeControl" type="range" min="1" max="10000" value="{weaponDamage}">
+		<br />
+		<div class="esovsRangeLabel">Armor</div>
+		<input id="esovsInputArmor" class="esovsInputControl" type="text" value="{armor}">
+		<input id="esovsControlArmor" class="esovsRangeControl" type="range" min="0" max="32100" value="{armor}">
+		<br />
+		<div class="esovsRangeLabel">Show All</div>
+		<input id="esovsInputShowAll" class="esovsInputControl" type="checkbox" {showAllChecked} value="1">
+		<div class="esovsRangeControl">Requires Reloading (Go Button)</div>
+		<br />
+		<input id="esovsInputReset" class="" type="reset" value="Reset">
+		<input id="esovsInputDefault" class="" type="button" value="Defaults">
+		</form>
+	</div>
+	<hr />
+	<div id="esovsSkillCoefData">
+		<a id="esovsSkillHistoryLink" href="{skillHistoryLink}">Skill Coefficient History</a>
+		<h2>Skill Coefficients</h2>
+		<div id="esovsSkillCoefContent" style="display: none;">
+			{coefSkillData}
+		</div>
+		<div class="esovsShowHideButton" id="esovsSkillCoefButton">Show Skill Coefficients</div>
+	</div>
+	<hr />
+	<div id="esovsRawData">
+		<a id="esovsRawDataSkillLink" class="esovsRawDataSkillLink">Link to Raw Skill Data</a>
+		<h2>Raw Skill Data</h2>
+		<div id="esovsRawDataContent" style="display: none;">
+			{rawSkillData}
+		</div>
+		<div class="esovsShowHideButton" id="esovsRawDataButton">Show Raw Data</div>
+	</div>
+</div>
+<div id="esovsRightBlock" style="{rightBlockMargin}">
+	<div id="esovsSkillTree">{skillTree}</div>
+	<div id="esovsSkillContent">{skillContent}</div>
+	{skillBar}
+</div>
+
+<div class="esovsBlockClear"></div>
+<div id="esovsSubclassPopupRoot" style="display:none;">{subclassPopupContent}</div>
+<script type="text/javascript">
+	var g_SkillsVersion = '{version}';
+	var g_SkillsData = {skillsJson};
+	var g_SetSkillsData = {setSkillsJson};
+	var g_SkillSearchIds = {skillSearchIdJson};
+	var g_SkillHighlightId = {skillHighlightId};
+	var g_SkillHighlightType = "{skillHighlightType}";
+	var g_SkillHighlightLine = "{skillHighlightLine}";
+	var g_SkillShowAll = {skillShowAll};
+	var g_SkillUseUpdate10Cost = {useUpdate10Costs};
+	g_SkillDisplayType = "{displayType}";
+	var g_EsoSkillPointsUsed = {usedPoints};
+	var g_EsoSkillPassiveData = {passiveDataJson};
+	var g_EsoSkillActiveData = {activeDataJson};
+	var g_EsoSkillBarData = {skillBarJson};
+	var g_EsoSkillDestructionData = {destructionDataJson};
+	var g_EsoSkillDestructionElement = "";
+	var g_EsoSkillDestructionOffHandElement = "";
+	var g_EsoSkillPoisonSkills = {poisonSkillsJson};
+	var g_EsoSkillFlameAOESkills = {flameAOESkillsJson};
+	var g_EsoSkillElfBaneSkills = {elfBaneSkillsJson};
+	var g_EsoSkillHasV2Tooltips = {hasV2SkillTooltips};
+	var g_EsoCraftedSkills = {craftedSkillsJson};
+	var g_EsoCraftedScripts = {craftedScriptsJson};
+</script>
+<div class="esovsUpdateDate">Skill data last updated on {updateDate}.</div>
+<hr>
+<div id="esovs_footer">
+This content is made available by the <a href="//www.uesp.net">Unofficial Elder Scrolls Pages (UESP)</a>. Contact <a href="mailto:dave@uesp.net">Daveh</a> for information regarding this page.
+Source code for this project is available at <a href="https://github.com/uesp/uesp-esolog">GitHub</a>.
+</div>
+<div id="esovsPopupSkillTooltip" style="display: none;">
+</div>
+</body>
+</html>

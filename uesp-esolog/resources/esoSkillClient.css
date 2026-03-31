@@ -1,0 +1,143 @@
+.eso_skill_tooltip {
+	display: inline-block;
+	width: 52px;
+	height: 52px;
+	background-size: 100% 100%;
+	margin: 5px;
+	position: relative;
+	webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.eso_skill_tooltip:after {
+	background-image: url(https://esolog.uesp.net/resources/eso_ability_frame.png);
+	background-size: 100% 100%;
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	user-select: none;
+	pointer-events: none;
+}
+
+.eso_skill_tooltip img {
+	width: 48px;
+	height: 48px;
+	position: relative;
+	top: 2px;
+	left: 2px;
+}
+
+.esoSkillPopupIcon {
+	width: 48px;
+	height: 48px;
+	margin-top: 2px;
+	vertical-align: middle;
+	display: block;
+	margin-left: 140px;
+}
+
+.uespEsoSkillBar {
+	margin: 5px;
+	display: inline-block;
+	text-align: center;
+}
+
+.uespEsoSkillIconDiv {
+	display: inline-block;
+	width: 52px;
+	height: 52px;
+	background-size: 100% 100%;
+	margin: 5px;
+	position: relative;
+	webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.uespEsoSkillIconDiv:after {
+	background-image: url(https://esolog.uesp.net/resources/eso_ability_frame.png);
+	background-size: 100% 100%;
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	user-select: none;
+	pointer-events: none;
+}
+
+.uespEsoSkillIconDivPassive:after {
+	background-image: url(https://esolog.uesp.net/resources/eso_round_ability_frame.png);
+	background-size: 100% 100%;
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	user-select: none;
+	pointer-events: none;
+}
+
+.uespEsoSkillIcon {
+	width: 48px;
+	height: 48px;
+	margin-top: 2px;
+	vertical-align: middle;
+	display: inline-block;
+	cursor: pointer;
+	margin: 2px;
+}
+
+.uespEsoSkillIcon:hover {
+	filter: brightness(1.5);
+}
+
+.esovsSkillTooltipLink {
+	float: right;
+	margin-top: 5px;
+	color: #777;
+}
+
+.esovsSkillTooltipLink a {
+}
+
+.uespEsoSkillIconDiv a, .uespEsoSkillIconDiv a:focus {
+	border: none;
+	outline:none;
+}
+
+.esovsSkillRace {
+	padding-bottom: 20px;
+	clear: both;
+}
+
+.esovsSkillRace .esoSkillPopupIcon {
+	float: left;
+	margin-right: 10px;
+	margin-left: 5px;
+} 
+
+.esovsSkillRace .esovsSkillTooltipTitle {
+	display: inline;
+	padding: 5px;
+}
+
+.esovsSkillRace .esovsSkillTooltipDesc {
+	display: inline;
+}
+
+.esovsSkillTooltipRaceDesc {
+	display: inline;
+}

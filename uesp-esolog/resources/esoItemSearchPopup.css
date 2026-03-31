@@ -1,0 +1,174 @@
+#esoispRoot {
+	position: absolute;
+	width: 450px;
+	height: 515px;
+	top: 100px;
+	left: 100px;
+	background-color: black;
+	color: white;
+	font-family: "Arial", sans-serif;
+	border: solid 2px gray;
+	z-index: 40;
+	padding: 7px;
+	font-size: 13px;
+}
+
+#esoispRoot .eso_item_link_q1 { color: #fff !important; }
+
+#esoispCloseButton {
+	position: absolute;
+	right: 3px;
+	top: 3px;
+	width: 15px;
+	height: 15px;
+	cursor: pointer;
+	background-color: #aaa;
+	border-top: 1px solid #CCCCCC;
+	border-right: 1px solid #333333;
+	border-bottom: 1px solid #333333;
+	border-left: 1px solid #CCCCCC;
+	color: black;
+	text-align: center;
+	vertical-align: middle;
+	line-height: 14px;
+}
+
+#esoispCloseButton:hover {
+	background-color: #eee;
+}
+
+#esoispResults {
+	overflow-x: hidden;
+	overflow-y: auto;
+	height: 345px;
+	float: none;
+	clear: both;
+	margin-top: 10px;
+	color: #ff9999;
+    border: solid 1px gray;
+	padding: 3px;
+	position: absolute;
+	left: 5px;
+	bottom: 5px;
+	width: 445px;
+}
+
+.esoispResultRow {
+	font-weight: bold;
+	margin-left: 10px;
+	height: 36px;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+
+.esoispResultRow:hover {
+	cursor: pointer;
+	background-color: #777;
+}
+
+.esoispResultIcon {
+	width: 32px;
+	vertical-align: middle;
+	padding: 2px;
+	margin-right: 8px;
+}
+
+.esoispResultDetails {
+	font-weight: normal;
+	display: inline-block;
+	margin-left: 10px;
+	font-size: 0.9em;
+}
+
+#esoispTitle {
+	font-size: 15px;
+	font-weight: bold;
+	text-align: center;
+	color: #ffff99;
+	padding: 3px;
+}
+
+#esoispLevel {
+	width: 60px;
+	display: inline-block;	
+}
+
+#esoispQuality {
+	display: inline-block;	
+}
+
+#esoispLevelSlider {
+	width: 240px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.esoispInputLabel {
+	text-align: right;
+	width: 90px;
+	height: 24px;
+	display: inline-block;
+	vertical-align: middle;
+	line-height: 24px;
+}
+
+#esoispSearchButton {
+	margin-top: 4px;
+	float: right;
+}
+
+#esoispInputText {
+	width: 113px;
+	z-index: 10;
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+#esoispInputs select {
+	width: 120px;
+}
+
+#esoispLevelSlider::-ms-thumb {
+  -webkit-appearance: none;
+  border: 1px solid #000000;
+  height: 36px;
+  width: 10px;
+  border-radius: 3px;
+  background: #ffffff;
+  cursor: pointer;
+  margin-top: -14px;
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+}
+
+#esoispUneqipButton, #esoispSearchButton, #esoispDisableButton {
+	background-color: #ccc !important;
+}
+
+#esoispAnyLevelRoot {
+	float: left;
+	position: absolute;
+}
+
+
+#esoispQualityLabel {
+	width: 72px;
+}
+
+
+#esoispSearchType {
+	width: 139px !important;
+	height: 21px;
+	outline: none;
+}
+
+#esoispSearchTypeRoot {
+	position: relative;
+	display: inline-block;
+}
+
+#esoispResultText {
+	display: inline-block;
+	width: 270px;
+	text-align: center;
+}

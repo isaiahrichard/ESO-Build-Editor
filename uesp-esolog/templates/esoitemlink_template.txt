@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>UESP:ESO {itemTypeTitle}Item{versionTitle} -- {itemName}</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoitemlink.css" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoitemlink_embed.css" />
+		<script type="text/javascript" src="//esolog-static.uesp.net/resources/jquery-1.10.2.js"></script>
+		<script type="text/javascript" src="//esolog-static.uesp.net/resources/esoitemlink.js"></script>
+	</head>
+<body>
+<a href="/viewlog.php">Back to Home</a>
+<h1>ESO {itemTypeTitle}Item{versionTitle} -- {itemName}</h1>
+<h2 id="esoil_levelheader">{itemQuality} {itemLevel}</h2>
+
+<div id="esoil_itemcontainer">
+	<div id="esoil_outeritembox">
+		<div id="esoil_itembox">
+			<div id="esoil_watermark">uesp.net</div>
+			<div id="esoil_itemstyle">{itemStyle}</div>
+			<img src="{iconLink}" id="esoil_itemicon"/>
+			<div id="esoil_itemtype1">{itemType1}</div>
+			<div id="esoil_itemtype2">{itemType2}</div>
+			<div id="esoil_itemstolen">{itemStolen}</div>
+			<div id="esoil_itembindtype">{itemBindType}</div>
+			<div id="esoil_itemname" class="esoil_quality_{itemQuality}">{itemNameUpper}</div>
+			<img src="//esolog-static.uesp.net/resources/eso_item_hr.png" id="esoil_item_hr"/>
+			<div id="esoil_datablock">
+				<div id="esoil_itemleftblock" style="display:{itemLeftBlockDisplay};">{itemLeftBlock}</div>
+				<div id="esoil_itemlevelblock" style="display:{itemLevelBlockDisplay};">{itemLevelBlock}</div>
+				<div id="esoil_itemrightblock" style="display:{itemRightBlockDisplay};">{itemRightBlock}</div>
+			</div>
+			<div id="esoil_itembar" class="{itemBarClass}">{itemBar}</div>
+			<div id="esoil_itemabilityblock">{itemAbilityBlock}</div>
+			<div id="esoil_itemtraitabilityblock">{itemTraitAbilityBlock}</div>
+			<div id="esoil_itemenchantblock">{itemEnchantBlock}</div>
+			<div id="esoil_itemtraitblock">{itemTraitBlock}</div>
+			<div id="esoil_itemsetblock">{itemSetBlock}</div>
+			<div id="esoil_itemdyestampblock">{itemDyeStampBlock}</div>
+			<div id="esoil_itemdesc" class="{itemDescClass}">{itemDesc}</div>
+			<div id="esoil_itemtags">{itemTags}</div>
+			<div id="esoil_itemcraftedblock">{itemCraftedBlock}</div>
+			<div id="esoil_itemnewvalueblock" style="display:{itemNewValueBlockDisplay}">{itemNewValueBlock}</div>
+		</div>
+	</div>
+	<br />
+	<div id="esoil_linkcontainer" style="display: {extraDataLinkDisplay};">
+		<a id="esoil_datatablelink" href="dumpMinedItems.php?itemid={itemId}&output=html">View Data Table</a>
+		<a id="esoil_summarylink" href="itemLink.php?itemid={itemId}&summary&{viewSumDataExtraQuery}">View Summary Data</a>
+		<a id="esoil_itemimagelink" href="{itemLinkURL}">Link to Item Image</a>	
+	</div>
+	<br />
+	<div id="esoil_itemsimilarblock" style="display: {similarItemBlockDisplay};">
+		<div id="esoil_itemsimilarheader">Similar Items</div>
+		The following items have the same ID, level and quality:
+		<ul id="esoil_itemsimilarlist">
+			{itemSimilarBlock}
+		</ul>
+	</div>
+</div>
+
+<div id="esoil_controls" style="display: {controlBlockDisplay};">
+	<input id="esoil_levelcontrol" class="esoil_rangecontrol" type="range" min="1" max="66" value="{itemLevelRaw}" />
+	<input class="esoil_rangelabel" id="esoil_leveltext" type="text" value="{itemLevel}" readonly />
+	<br />
+	<input id="esoil_qualitycontrol"  class="esoil_rangecontrol" type="range" min="0" max="5" value="{itemQualityRaw}" />
+	<input class="esoil_rangelabel" id="esoil_qualitytext" type="text" value="{itemQuality}" readonly />
+</div>
+
+<div id="esoil_rawdata">
+	<h2 id="esoil_rawdatalist">Raw {itemTypeTitle}Item Data</h2>
+	<table id="esoil_rawdatatable" cellpadding="0" cellspacing="0" border="0">
+	{itemRawDataList}
+	</table>
+</div>
+
+<script type="text/javascript">
+	var allItemData = {itemDataJson};
+	var itemRawVersion = {rawItemVersion};
+</script>
+<hr>
+<div id="esoil_footer">
+This content is made available by the <a href="//uesp.net">Unofficial Elder Scrolls Pages (UESP)</a>. Contact <a href="mailto:dave@uesp.net">Daveh</a> for information regarding this page.
+Source code for this project is available at <a href="https://github.com/uesp/uesp-esolog">GitHub</a>.
+</div>
+</body>
+</html>

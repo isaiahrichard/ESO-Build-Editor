@@ -1,0 +1,115 @@
+body {
+	background-color: #FBEFD5;
+	font-family: sans-serif;
+	font-size: 13px;
+}
+
+.elvRecordView {
+	font-size: 11 px;
+	display: block;
+	unicode-bidi: embed;
+	font-family: monospace;
+	white-space: pre-wrap;
+}
+
+.elvLargeStringView {
+	font-size: 11 px;
+	display: block;
+	unicode-bidi: embed;
+	font-family: monospace;
+	white-space: pre-wrap;
+}
+
+.elvRecordTypeList {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.elvRecordTypeList li {
+	padding: 3px;
+}
+
+.elvFilterLink {
+	padding-right: 8px;
+	white-space: nowrap;
+}
+
+.elvRecordLink {
+	padding-right: 8px;
+	white-space: nowrap;
+}
+
+.elvExternalLink {
+	padding-right: 8px;
+	white-space: nowrap;
+}
+
+.elvLastUpdate {
+	font-size: 11px;
+}
+
+.elvLicense {
+	font-size: 11px;
+}
+
+#elvSearchForm {
+	position: absolute;
+	top: 20px;
+	right: 20px;
+}
+
+#elvSearchType {
+	padding-top: 2px;
+	font-size: 11px;
+	display: inline-block;
+}
+
+#elvSearchType select {
+	font-size: 11px;
+}
+
+.elvSearchAdvanced {
+	float: right;
+	margin-top: 3px;
+}
+
+.elvColorBox {
+	width: 16px;
+	height: 16px;
+	display: inline-block;
+	border: solid 1px gray;
+}
+
+.esologSearchRow:hover {
+	cursor: pointer;
+	background-color: #ccc;
+}
+
+.uespesoGoldenVendor h4 {
+	font-size: larger;
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+.uespesoGoldenItemList {
+	margin-top: 5px;
+}
+
+.uespEsoSkillRefTable tr td:nth-child(3), 
+.uespEsoSkillRefTable tr td:nth-child(4),
+.uespEsoSkillRefTable tr td:nth-child(5) {
+	text-align: center;
+}
+
+.tablesorter-default tbody>tr.even:hover>td, .tablesorter-default tbody>tr.hover>td, .tablesorter-default tbody>tr.odd:hover>td, .tablesorter-default tbody>tr:hover>td {
+	background-color: transparent;
+}
+.tablesorter-default {
+	background-color: transparent;
+}
+.tablesorter-default td {
+    background-color: transparent;
+}
+.tablesorter-default th, .tablesorter-default thead td {
+	background-color: transparent;
+}

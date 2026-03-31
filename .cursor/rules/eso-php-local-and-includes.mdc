@@ -1,0 +1,84 @@
+---
+description: "UESP forks: PHP entry points, require_once rewiring, secrets, esoCommon integration, and EsoBuildDataEditor server-side behavior."
+globs: "**/*.php"
+alwaysApply: false
+---
+
+# PHP in this workspace (for developers who know the web but not PHP)
+
+## What PHP is doing here
+
+PHP runs **on the server** for each HTTP request. There is no separate “build” of the PHP source into the page: the interpreter **executes** `.php` files, which typically **output HTML** (and embedded JSON in script blocks) to the browser.
+
+**Entry points you will touch most often:**
+
+| File | Role |
+|------|------|
+| `uesp-esochardata/testBuild.php` | Minimal page: includes `editBuild.class.php`, instantiates `EsoBuildDataEditor`, prints HTML. Also pulls **remote** CSS/JS from UESP unless you change URLs. |
+| `uesp-esochardata/editBuild.class.php` | Core editor: DB load, template fill, integration with `viewCps` / `viewSkills` from esolog. |
+| `uesp-esochardata/viewBuildData.class.php` | Build viewing (shares patterns with editor). |
+| `uesp-esolog/esoCommon.php` | Large shared module: constants, helpers, DB-related patterns used across UESP ESO tooling. |
+
+When explaining changes, distinguish **“this runs once per request on the server”** from **“this runs continuously in the browser after load.”**
+
+---
+
+## `require_once` and the include graph
+
+`require_once "path.php"` **loads and executes** that file **once** per request, then skips on later calls with the same path. If the path is wrong, the request **fatal-errors** early — there is no graceful bundler like in frontend tooling.
+
+**Production assumption in this repo:** absolute Linux paths such as:
+
+- `/home/uesp/secrets/esolog.secrets`
+- `/home/uesp/esolog.static/esoCommon.php`
+
+**Local dev task:** replace these with paths valid on the user’s machine, preferably **`__DIR__`-relative** to the repo so clones are portable, e.g. `require_once __DIR__ . '/../uesp-esolog/esoCommon.php';` (exact layout depends on where secrets live — never commit real credentials).
+
+**Teaching angle:** Think of `require_once` as **importing a PHP file whose top-level code runs immediately** (like a JS module with top-level side effects), plus it can define **classes** and **functions** for later use.
+
+Also note: `esoCommon.php` in esolog begins with `require_once("UespMemcachedSession.php");` — local stack may need those session files present or paths adjusted.
+
+---
+
+## Secrets files
+
+UESP code expects small PHP files under a **secrets** directory that define variables (e.g. DB host, user, password, database names) consumed by `esoCommon.php` and callers. **Do not commit secrets.** When helping the user, describe **which variables** must exist and **which file** expects them (`esolog.secrets`, `esobuilddata.secrets`, `esochardata.secrets` appear in different entry points).
+
+---
+
+## PHP snippets this codebase favors (map from JS/TS)
+
+- **`$obj->prop` / `$obj->method()`** — class instance access (this codebase uses **`class`** heavily; do not refactor to another style unless asked).
+- **`array()` or `[]`** — ordered maps/lists; often JSON-shaped after `json_encode`.
+- **`public $foo`** — instance fields on classes like `EsoBuildDataEditor` (e.g. `$LOAD_RULES_FROM_DB`, `$LIVE_RULES_VERSION`).
+- **String concat with `.`** — `'a' . $id` not `+`.
+- **`print(...)` / `echo`** — sends bytes to the HTTP response (the “HTML document” is just a growing string to the client).
+
+---
+
+## Server ↔ client boundary
+
+PHP’s job for the editor includes:
+
+- Query MySQL for **rule definitions** (`rules`, `effects`, `computedStats`, `versions`).
+- Serialize them into **JSON strings** embedded in the page (via template) so `esoEditBuild.js` can read globals.
+
+If you change **column names**, **JSON shape**, or **version strings**, you must keep **PHP assembly**, **template variable names**, and **JS consumers** aligned. Say that explicitly when proposing edits.
+
+---
+
+## When editing PHP here
+
+- Prefer **small, surgical** path and logic fixes; preserve UESP naming (`ruleType`, `matchRegex`, `computedStats`, etc.).
+- If adding a feature that needs **new DB columns**, mention **migration/seed** impact (`generate_seed_sql.py` / hand SQL) and **JS** impact, not only PHP.
+- After changes, in your explanation, include **one sentence: “On the next request, PHP will now …”** so the learner ties code to HTTP lifecycle.
+
+---
+
+## Comprehension checks (PHP work)
+
+When this rule applies, end with questions such as:
+
+- Which `require_once` would fail first if `esoCommon.php` moved to a new folder?
+- What is the difference between changing `$LIVE_RULES_VERSION` and changing a row in the `versions` table?
+- Where does PHP stop and JavaScript start for the stat engine on a single page load?

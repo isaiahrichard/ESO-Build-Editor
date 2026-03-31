@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>UESP:ESO Alchemy Calculator</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoitemlink_embed.css" />
+		<link rel="stylesheet" href="//esolog.uesp.net/resources/esopotions.css" />
+		<script type="text/javascript" src="//esolog.uesp.net/resources/jquery-1.10.2.js"></script>
+		<script type="text/javascript" src="//esolog.uesp.net/resources/esopotions.js"></script>
+		<script type="text/javascript" src="//en.uesp.net/w/extensions/UespEsoItemLink/uespitemlink.js"></script>
+	</head>
+<body>
+<a href="" id="esopdPotionLink">Link to Potion</a>
+<h1>UESP:ESO Alchemy Calculator</h1>
+
+<div id="esopd_root">
+	<div id="esopdEffects">
+		<button onclick="OnEsoPotionEffectFind()"  id="esopdFindEffects">Find</button>
+		<button onclick="OnEsoPotionEffectReset()" id="esopdResetEffects">Reset</button>
+		<h3>Effects</h3>
+		<div class='esopdButtonSort' id='esopdButtonSortByName'>Sort By Name</div>
+		<div class='esopdButtonSort' id='esopdButtonSortByID'>Sort By ID</div>
+		{effects}
+	</div>
+	<div id="esopdCenter">
+		<div id="esopdTooltipContainer">
+			<div id="esopdTooltip" class="">
+			</div>
+			<div id="esopdCopyItemLink">Copy Item Link</div>
+			<div id="esopdPotionData">Potion Data = 0</div>
+		</div>
+		<div id="esopdWorkArea">
+			<div id="esopdSolventUsed" solvent="{solventName}">
+				<img src="{solventIcon}">
+				<div class="esopdWorkAreaName">{solventName}<br/>{solventLevel}</div>
+			</div>
+			<div id="esopdReagent1" reagent="{reagentName1}">
+				<img class="esopdReagentIcon" src="{reagentIcon1}">
+				<div class="esopdWorkAreaName">{reagentName1}</div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon11}" title="{reagentEffectTitle11}"></div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon12}" title="{reagentEffectTitle12}"></div><br/>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon13}" title="{reagentEffectTitle13}"></div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon14}" title="{reagentEffectTitle14}"></div>
+			</div>
+			<div id="esopdReagent2" reagent="{reagentName2}">
+				<img class="esopdReagentIcon" src="{reagentIcon2}">
+				<div class="esopdWorkAreaName">{reagentName2}</div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon21}" title="{reagentEffectTitle21}"></div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon22}" title="{reagentEffectTitle22}"></div><br/>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon23}" title="{reagentEffectTitle23}"></div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon24}" title="{reagentEffectTitle24}"></div>
+			</div>
+			<div id="esopdReagent3" reagent="{reagentName3}">
+				<img class="esopdReagentIcon" src="{reagentIcon3}">
+				<div class="esopdWorkAreaName">{reagentName3}</div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon31}" title="{reagentEffectTitle31}"></div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon32}" title="{reagentEffectTitle32}"></div><br/>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon33}" title="{reagentEffectTitle33}"></div>
+				<div class="esopdReagentEffects"><img src="{reagentEffectIcon34}" title="{reagentEffectTitle34}"></div>
+			</div>
+		</div>
+	</div>
+	<div id="esopdRight">
+		<div id="esopdReagentTabs">
+			<div class="esopdReagentTabSpacer"></div>
+			<div class="esopdReagentTab esopdReagentTabSelected" tabid="esopdReagents">Reagents</div>
+			<div class="esopdReagentTabSpacer"></div>
+			<div class="esopdReagentTab" tabid="esopdSolvents">Solvents</div>
+			<div class="esopdReagentTabSpacer"></div>
+			<div class="esopdReagentTab" tabid="esopdFindPotions" id="esopdFindPotionTab">Find</div>
+			<div class="esopdReagentTabSpacer"></div>
+			<div class="esopdReagentTab" tabid="esopdLearn" id="esopdLearnTab">Learn</div>
+		</div>
+		<div id="esopdReagents">
+			Click on the reagents below to add it to potion crafting area.<br/>
+			{reagents}
+		</div>
+		<div id="esopdSolvents" style="display: none;">
+			Click on the solvents below to add it to potion crafting area.<br/>
+			{solvents}
+		</div>
+		<div id="esopdFindPotions" style="display: none;">
+			Select 1-3 effects on the left and hit "Find" to search for matching potion combinations.
+			<div id="esopdFindPotionMsg"></div><br/>
+			<div id="esopdFindItemLinkRoot">
+				Find Effects from Item Link (Master Writ or Crafted Potion):
+				<input type="text" id="esopdFindItemLink" value="" size="24" maxlength="100" onkeydown="OnFindItemLinkKeyDown();" />
+				<button id="esopdFindItemLinkButton" onclick="OnEsoPotionFindItemLinkButton();">Lookup Item Link</button>
+			</div>
+			Show Only:
+				<input type="checkbox" id="esopdFindTwoReagents">2 Ingredient
+				<input type="checkbox" id="esopdFindThreeReagents">3 Ingredient
+				<input type="checkbox" id="esopdFindOneEffect">1 Effect
+				<input type="checkbox" id="esopdFindTwoEffects">2 Effects
+				<input type="checkbox" id="esopdFindThreeEffects">3 Effects
+			
+			<div id="esopdFindPotionResults"></div>
+		</div>
+		<div id="esopdLearn" style="display: none;">
+			Level up Alchemy and learn the traits of all reagents by using one of the following guides.
+			<p/>
+			From level 1 Alchemy you can learn the traits of all reagents in 31 different combinations (this includes the 2 new reagents from Summerset, 2 from Elsweyr, and 3 from Greymoor):
+			<ol class="esopdLearnList">
+				<li reagent1="Nirnroot" reagent2="Violet Coprinus" reagent3="">Nirnroot + Violet (then Level up to Level 15 Alchemy and purchase Laboratory Use)</li>
+				<li reagent1="Blessed Thistle" reagent2="Namira's Rot" reagent3="Nirnroot">Blessed Thistle + Namira's Rot + Nirnroot</li>
+				<li reagent1="Imp Stool" reagent2="Nirnroot" reagent3="Stinkhorn">Imp Stool + Nirnroot + Stinkhorn</li>
+				<li reagent1="Dragon Rheum" reagent2="Nirnroot" reagent3="Vile Coagulant">Dragon Rheum + Nirnroot + Vile Coagulant</li>
+				<li reagent1="Dragon's Blood" reagent2="Nirnroot" reagent3="Spider Egg">Dragon's Blood + Nirnroot + Spider Egg</li>
+				<li reagent1="Butterfly Wing" reagent2="Nirnroot" reagent3="Powdered Mother of Pearl">Butterfly Wing + Nirnroot + Powdered Mother of Pearl</li>
+				<li reagent1="Emetic Russula" reagent2="Fleshfly Larva" reagent3="Violet Coprinus">Emetic Russula + Fleshfly Larva + Violet Coprinus</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Fleshfly Larva" reagent3="Luminous Russula">Crimson Nirnroot + Fleshfly Larva + Luminous Russula</li>
+				<li reagent1="Lady's Smock" reagent2="Namira's Rot" reagent3="Violet Coprinus">Lady's Smock + Namira's Rot + Violet Coprinus</li>
+				<li reagent1="Blessed Thistle" reagent2="Dragonthorn" reagent3="Wormwood">Blessed Thistle + Dragonthorn + Wormwood</li>
+				<li reagent1="Corn Flower" reagent2="Stinkhorn" reagent3="Torchbug Thorax">Corn Flower + Stinkhorn + Torchbug Thorax</li>
+				<li reagent1="Mudcrab Chitin" reagent2="Nightshade" reagent3="Stinkhorn">Mudcrab Chitin + Nightshade + Stinkhorn</li>
+				<li reagent1="Dragonthorn" reagent2="Stinkhorn" reagent3="Water Hyacinth">Dragonthorn + Stinkhorn + Water Hyacinth</li>
+				<li reagent1="Bugloss" reagent2="Columbine" reagent3="Namira's Rot">Bugloss + Columbine + Namira's Rot</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Nightshade" reagent3="Vile Coagulant">Crimson Nirnroot + Nightshade + Vile Coagulant</li>
+				<li reagent1="Blue Entoloma" reagent2="Bugloss" reagent3="Dragon's Bile">Blue Entoloma + Bugloss + Dragon's Bile</li>
+				<li reagent1="Dragon Rheum" reagent2="Dragon's Bile" reagent3="Torchbug Thorax">Dragon Rheum + Dragon's Bile + Torchbug Thorax</li>
+				<li reagent1="Chaurus Egg" reagent2="Columbine" reagent3="Wormwood">Chaurus Egg + Columbine + Wormwood</li>
+				<li reagent1="Bugloss" reagent2="White Cap" reagent3="Wormwood">Bugloss + White Cap + Wormwood</li>
+				<li reagent1="Clam Gall" reagent2="Mudcrab Chitin" reagent3="Wormwood">Clam Gall + Mudcrab Chitin + Wormwood</li>
+				<li reagent1="Luminous Russula" reagent2="Mountain Flower" reagent3="Spider Egg">Luminous Russula + Mountain Flower + Spider Egg</li>
+				<li reagent1="Chaurus Egg" reagent2="Powdered Mother of Pearl" reagent3="Scrib Jelly">Chaurus Egg + Powdered Mother of Pearl + Scrib Jelly</li>
+				<li reagent1="Chaurus Egg" reagent2="Crimson Nirnroot" reagent3="Water Hyacinth">Chaurus Egg + Crimson Nirnroot + Water Hyacinth</li>
+				<li reagent1="Beetle Scuttle" reagent2="Imp Stool" reagent3="Powdered Mother of Pearl">Beetle Scuttle + Imp Stool + Powdered Mother of Pearl</li>
+				<li reagent1="Butterfly Wing" reagent2="Imp Stool" reagent3="Mountain Flower">Butterfly Wing + Imp Stool + Mountain Flower</li>
+				<li reagent1="Blessed Thistle" reagent2="Dragon Rheum" reagent3="Dragon's Blood">Blessed Thistle + Dragon Rheum + Dragon's Blood</li>
+				<li reagent1="Blessed Thistle" reagent2="Mountain Flower" reagent3="Mudcrab Chitin">Blessed Thistle + Mountain Flower + Mudcrab Chitin</li>
+				<li reagent1="Blue Entoloma" reagent2="Clam Gall" reagent3="Scrib Jelly">Blue Entoloma + Clam Gall + Scrib Jelly</li>
+				<li reagent1="Beetle Scuttle" reagent2="Corn Flower" reagent3="Lady's Smock">Beetle Scuttle + Corn Flower + Lady's Smock</li>
+				<li reagent1="Emetic Russula" reagent2="Water Hyacinth" reagent3="White Cap">Emetic Russula + Water Hyacinth + White Cap</li>
+				<li reagent1="Dragon's Bile" reagent2="Fleshfly Larva" reagent3="">Dragon's Bile + Fleshfly Larva</li>
+			</ol>
+			<p/><br/>
+			To learn just the 2 new reagents from the Summerset chapter in as few combinations as possible (4):
+			<ol class="esopdLearnList">
+				<li reagent1="Clam Gall" reagent2="Mudcrab Chitin" reagent3="Spider Egg">Clam Gall + Mudcrab Chitin + Spider Egg</li>
+				<li reagent1="Clam Gall" reagent2="Fleshfly Larva" reagent3="">Clam Gall + Fleshfly Larva</li>
+				<li reagent1="Powdered Mother of Pearl" reagent2="Butterfly Wing" reagent3="Scrib Jelly">Powdered Mother of Pearl + Butterfly Wing + Scrib Jelly</li>
+				<li reagent1="Powdered Mother of Pearl" reagent2="Beetle Scuttle" reagent3="">Powdered Mother of Pearl + Beetle Scuttle</li>
+			</ol>
+			<p/><br/>
+			To learn just the 2 new reagents from the Elsweyr chapter in as few combinations as possible (3):
+			<ol class="esopdLearnList">
+				<li reagent1="Dragon's Blood" reagent2="Dragon's Bile" reagent3="Spider Egg">Dragon's Blood + Dragon's Bile + Spider Egg</li>
+				<li reagent1="Dragon's Blood" reagent2="Blessed Thistle" reagent3="">Dragon's Blood + Blessed Thistle + Nightshade</li>
+				<li reagent1="Dragon's Bile" reagent2="Fleshfly Larva" reagent3="">Dragon's Bile + Fleshfly Larva</li>
+				<li reagent1="Dragon Rheum" reagent2="Dragon's Blood" reagent3="Corn Flower">Dragon Rheum + Dragon's Blood + Corn Flower</li>
+				<li reagent1="Dragon Rheum" reagent2="Blessed Thistle" reagent3="Imp Stool">Dragon Rheum + Blessed Thistle + Imp Stool</li>
+			</ol>
+			<p/><br/>
+			To learn just the 3 new reagents from the Greymoor chapter in as few combinations as possible (5):
+			<ol class="esopdLearnList">
+				<li reagent1="Chaurus Egg" reagent2="Crimson Nirnroot" reagent3="Blue Entoloma">Chaurus Egg + Crimson Nirnroot + Blue Entoloma</li>
+				<li reagent1="Chaurus Egg" reagent2="Vile Coagulant" reagent3="Columbine">Chaurus Egg + Vile Coagulant + Columbine</li>
+				<li reagent1="Chaurus Egg" reagent2="Vile Coagulant" reagent3="Corn Flower">Chaurus Egg + Vile Coagulant + Corn Flower</li>
+				<li reagent1="Nightshade" reagent2="Vile Coagulant" reagent3="Columbine">Nightshade + Vile Coagulant + Columbine</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Fleshfly Larva" reagent3="Water Hyacinth">Crimson Nirnroot + Fleshfly Larva + Water Hyacinth</li>
+			</ol>
+			<p/><br/>
+			Alternatively, you can use the following 50 combinations to level Alchemy from 1 to 18+ and learn all traits in the process. Use the highest possible
+			solvent at all times to maximize inspiration gain. Characters with bonus inspiration (ESO+, CP Inspiration Boost, Orc Passive) will require fewer 
+			combinations to reach the specific Alchemy levels indicated below. Once you've learned all traits use any 2 reagents to continue leveling with
+			the highest possible solvent level.
+			<ol class="esopdLearnList">
+				<li reagent1="Chaurus Egg" reagent2="White Cap" reagent3="">Chaurus Egg + White Cap (use level 10 solvents)</li>
+				<li reagent1="Blue Entoloma" reagent2="White Cap" reagent3="">Blue Entoloma + White Cap</li>
+				<li reagent1="Bugloss" reagent2="White Cap" reagent3="">Bugloss + White Cap</li>
+				<li reagent1="Columbine" reagent2="Mountain Flower" reagent3="">Columbine + Mountain Flower</li>
+				<li reagent1="Luminous Russula" reagent2="Mountain Flower" reagent3="">Luminous Russula + Mountain Flower</li>
+				<li reagent1="Imp Stool" reagent2="Mountain Flower" reagent3="">Imp Stool + Mountain Flower</li>
+				<li reagent1="Dragonthorn" reagent2="Stinkhorn" reagent3="">Dragonthorn + Stinkhorn</li>
+				<li reagent1="Emetic Russula" reagent2="Stinkhorn" reagent3="">Emetic Russula + Stinkhorn</li>
+				<li reagent1="Nightshade" reagent2="Vile Coagulant" reagent3="">Nightshade + Vile Coagulant</li>
+				<li reagent1="Corn Flower" reagent2="Vile Coagulant" reagent3="">Corn Flower + Vile Coagulant</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Vile Coagulant" reagent3="">Crimson Nirnroot + Vile Coagulant</li>
+				<li reagent1="White Cap" reagent2="Wormwood" reagent3="">White Cap + Wormwood</li>
+				<li reagent1="Dragonthorn" reagent2="Wormwood" reagent3="">Dragonthorn + Wormwood</li>
+				<li reagent1="Columbine" reagent2="Wormwood" reagent3="">Columbine + Wormwood</li>
+				<li reagent1="Namira's Rot" reagent2="Wormwood" reagent3="">Namira's Rot + Wormwood</li>
+				<li reagent1="Water Hyacinth" reagent2="Wormwood" reagent3="">Water Hyacinth + Wormwood</li>
+				<li reagent1="Luminous Russula" reagent2="Wormwood" reagent3="">Luminous Russula + Wormwood</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Water Hyacinth" reagent3="">Crimson Nirnroot + Water Hyacinth</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Fleshfly Larva" reagent3="">Crimson Nirnroot + Fleshfly Larva (use level 20 solvents)</li>
+				<li reagent1="Dragon's Bile" reagent2="Fleshfly Larva" reagent3="">Dragon's Bile + Fleshfly Larva</li>
+				<li reagent1="Fleshfly Larva" reagent2="Stinkhorn" reagent3="">Fleshfly Larva + Stinkhorn</li>
+				<li reagent1="Blessed Thistle" reagent2="Dragonthorn" reagent3="">Blessed Thistle + Dragonthorn</li>
+				<li reagent1="Corn Flower" reagent2="Lady's Smock" reagent3="">Corn Flower + Lady's Smock</li>
+				<li reagent1="Lady's Smock" reagent2="Violet Coprinus" reagent3="">Lady's Smock + Violet Coprinus</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Lady's Smock" reagent3="">Crimson Nirnroot + Lady's Smock</li>
+				<li reagent1="Bugloss" reagent2="Columbine" reagent3="">Bugloss + Columbine</li>
+				<li reagent1="Mudcrab Chitin" reagent2="Nightshade" reagent3="">Mudcrab Chitin + Nightshade</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Nightshade" reagent3="">Crimson Nirnroot + Nightshade</li>
+				<li reagent1="Crimson Nirnroot" reagent2="Namira's Rot" reagent3="">Crimson Nirnroot + Namira's Rot</li>
+				<li reagent1="Namira's Rot" reagent2="Spider Egg" reagent3="">Namira's Rot + Spider Egg</li>
+				<li reagent1="Namira's Rot" reagent2="Powdered Mother of Pearl" reagent3="">Namira's Rot + Powdered Mother of Pearl</li>
+				<li reagent1="Chaurus Egg" reagent2="Mountain Flower" reagent3="">Chaurus Egg + Mountain Flower</li>
+				<li reagent1="Chaurus Egg" reagent2="Vile Coagulant" reagent3="">Chaurus Egg + Vile Coagulant</li>
+				<li reagent1="Emetic Russula" reagent2="Water Hyacinth" reagent3="">Emetic Russula + Water Hyacinth</li>
+				<li reagent1="Luminous Russula" reagent2="Stinkhorn" reagent3="">Luminous Russula + Stinkhorn</li>
+				<li reagent1="Dragon's Blood" reagent2="Spider Egg" reagent3="">Dragon's Blood + Spider Egg</li>
+				<li reagent1="Clam Gall" reagent2="Spider Egg" reagent3="">Clam Gall + Spider Egg (at level 15 Alchemy purchase Laboratory Use)</li>
+				<li reagent1="Powdered Mother of Pearl" reagent2="Scrib Jelly" reagent3="White Cap">Powdered Mother of Pearl + Scrib Jelly + White Cap</li>
+				<li reagent1="Beetle Scuttle" reagent2="Mountain Flower" reagent3="Powdered Mother of Pearl">Beetle Scuttle + Mountain Flower + Powdered Mother of Pearl</li>
+				<li reagent1="Beetle Scuttle" reagent2="Emetic Russula" reagent3="Violet Coprinus">Beetle Scuttle + Emetic Russula + Violet Coprinus</li>
+				<li reagent1="Corn Flower" reagent2="Dragon Rheum" reagent3="Torchbug Thorax">Corn Flower + Dragon Rheum + Torchbug Thorax</li>
+				<li reagent1="Dragon Rheum" reagent2="Dragon's Bile" reagent3="Scrib Jelly">Dragon Rheum + Dragon's Bile + Scrib Jelly</li>
+				<li reagent1="Nirnroot" reagent2="Stinkhorn" reagent3="Torchbug Thorax">Nirnroot + Stinkhorn + Torchbug Thorax</li>
+				<li reagent1="Fleshfly Larva" reagent2="Imp Stool" reagent3="Torchbug Thorax">Fleshfly Larva + Imp Stool + Torchbug Thorax</li>
+				<li reagent1="Mountain Flower" reagent2="Mudcrab Chitin" reagent3="White Cap">Mountain Flower + Mudcrab Chitin + White Cap</li>
+				<li reagent1="Blue Entoloma" reagent2="Butterfly Wing" reagent3="Spider Egg">Blue Entoloma + Butterfly Wing + Spider Egg</li>
+				<li reagent1="Butterfly Wing" reagent2="Dragon's Bile" reagent3="Nirnroot">Butterfly Wing + Dragon's Bile + Nirnroot</li>
+				<li reagent1="Blessed Thistle" reagent2="Dragon Rheum" reagent3="Dragon's Blood">Blessed Thistle + Dragon Rheum + Dragon's Blood</li>
+				<li reagent1="Clam Gall" reagent2="Fleshfly Larva" reagent3="White Cap">Clam Gall + Fleshfly Larva + White Cap</li>
+				<li reagent1="Blessed Thistle" reagent2="Stinkhorn" reagent3="White Cap">Blessed Thistle + Stinkhorn + White Cap</li>
+			</ol>
+			<p/><br/>
+			The cheapest combinations for skilling up are (PC-NA prices as of May 2020):
+			<ol class="esopdLearnList">
+				<li reagent1="Chaurus Egg" reagent2="White Cap" reagent3="">Chaurus Egg + White Cap = 43 gp</li>
+				<li reagent1="Blue Entoloma" reagent2="Chaurus Egg" reagent3="">Blue Entoloma + Chaurus Egg = 49 gp</li>
+				<li reagent1="Chaurus Egg" reagent2="Emetic Russula" reagent3="">Chaurus Egg + Emetic Russula = 60 gp</li>
+				<li reagent1="Chaurus Egg" reagent2="Dragonthorn" reagent3="">Chaurus Egg + Dragonthorn = 67 gp</li>
+				<li reagent1="Chaurus Egg" reagent2="Mountain Flower" reagent3="">Chaurus Egg + Mountain Flower = 77 gp</li>
+				<li reagent1="Fleshfly Larva" reagent2="Imp Stool" reagent3="">Fleshfly Larva + Imp Stool = 90 gp</li>
+				<li reagent1="Chaurus Egg" reagent2="Wormwood" reagent3="">Chaurus Egg + Wormwood = 91 gp</li>
+				<li reagent1="Blue Entoloma" reagent2="White Cap" reagent3="">Blue Entoloma + White Cap = 92 gp</li>
+				<li reagent1="Blue Entoloma" reagent2="Spider Egg" reagent3="">Blue Entoloma + Spider Egg = 96 gp</li>
+				<li reagent1="Fleshfly Larva" reagent2="Luminous Russula" reagent3="">Fleshfly Larva + Luminous Russula = 97 gp</li>
+			</ol>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	var g_EsoPotionReagents = {reagentJS};
+	var g_EsoPotionSolvents = {solventJS};
+	var g_EsoPotionEffects = {effectJS};
+	var g_EsoUnknownPotionEffect = {unknownEffectJS};
+</script>
+
+<hr>
+<div id="eso_footer">
+This content is made available by the <a href="//www.uesp.net">Unofficial Elder Scrolls Pages (UESP)</a>. Contact <a href="mailto:dave@uesp.net">Daveh</a> for information regarding this page.
+Source code for this project is available at <a href="https://github.com/uesp/uesp-esolog">GitHub</a>.
+</div>
+</body>
+</html>

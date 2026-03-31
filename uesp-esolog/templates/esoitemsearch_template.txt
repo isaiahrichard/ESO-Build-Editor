@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>UESP:ESO Item Search</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoitemlink.css" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoitemlink_embed.css" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoitemsearch.css" />
+		<script type="text/javascript" src="//esolog-static.uesp.net/resources/jquery-1.10.2.js"></script>
+		<script type="text/javascript" src="//esolog-static.uesp.net/resources/esoitemsearch.js"></script>
+		<script type="text/javascript" src="//www.uesp.net/w/extensions/UespEsoItemLink/uespitemlink.js"></script>
+	</head>
+<body>
+{topMenu}
+<h1>ESO Item Search</h1>
+<p />
+<form id="eso_item_search" action="" method="get">
+	<div class="esois_searchoptionheader">
+		Use the below options to search for items from the Elder Scrolls Online MMO with specific attributes and abilities. Note that the items are
+		"data mined" and may not actually be obtainable in game
+	</div>
+	<div id="esois_searchoptions">
+		
+		<input type="hidden" name="version" value="{formVersion}" />
+		<div class='esois_inlineblock'>
+	        <label for="text" class="esois_label1">Text:</label>
+	        <input type="text" name="text" id="esois_text" value="{formText}" size="32" maxlength="32" />
+	        <div class='esois_helpbutton' tooltip="Enter a string to search for in the item name or various description fields. You may also enter an item ID (1-99999) to find that specific item.">?</div>
+	    </div>
+		<div class='esois_inlineblock'>
+	        <label for="level" class="esois_label1">Level:</label>
+	        <input name="level" id="esois_level" value="{formLevel}" size="10" maxsize="10">
+	        <div class='esois_helpbutton' tooltip="Enter an item level from 1-66 or v1-v16. If you omit the level or quality the item summary will be shown.">?</div>
+	    </div>
+	    <div class='esois_inlineblock'>
+	        <label for="quality" class="esois_label1">Quality:</label>
+	        <select name="quality" id="esois_quality">
+	        	{listQuality}
+	        </select>
+	        <div class='esois_helpbutton' tooltip="Note that only some items (like Treasures) have a fixed quality. Most items are able to have any quality level.">?</div>
+	    </div>
+	    <div class='esois_inlineblock'>
+	        <label for="trait" class="esois_label1">Trait:</label>
+	        <select name="trait" id="esois_trait">
+	        	{listTrait}
+	        </select>
+	    </div>
+	    <div class='esois_inlineblock'>
+	        <label for="itemtype" class="esois_label1">Item Type:</label>
+	        <select name="itemtype" id="esois_itemtype">
+	        	{listItemType}
+	        </select>
+	    </div>
+	    <div class='esois_inlineblock'>
+	        <label for="equiptype" class="esois_label1">Equip Type:</label>
+	        <select name="equiptype" id="esois_equiptype">
+	        	{listEquipType}
+	        </select>
+		</div>
+		<div class='esois_inlineblock'>
+	    	<label for="weapontype" class="esois_label1">Weapon Type:</label>
+	        <select name="weapontype" id="esois_weapontype">
+	        	{listWeaponType}
+	        </select>
+		</div>
+		<div class='esois_inlineblock'>
+	        <label for="armortype" class="esois_label1">Armor Type:</label>
+	        <select name="armortype" id="esois_armortype">
+	        	{listArmorType}
+	        </select>
+		</div>
+		<div class='esois_inlineblock'>
+	    	<label for="enchant" class="esois_label1">Enchantment:</label>
+	        <select name="enchant" id="esois_enchant">
+	        	{listEnchant}
+	        </select>
+	        <div class='esois_helpbutton' tooltip="Search for the default enchantment on an item. Most items can have their enchantments replaced in-game.">?</div>
+		</div>
+		<div class='esois_inlineblock'>
+	    	<label for="effect" class="esois_label1">Effect:</label>
+	        <select name="effect" id="esois_effect">
+	        	{listEffect}
+	        </select>
+		</div>
+		<div>
+	        <label for="style" class="esois_label1">Style:</label>
+	        <select name="style" id="esois_style">
+	        	{listStyle}
+	        </select>
+	        <div class='esois_helpbutton' tooltip="Only items that have fixed styles will show up in the search results when searching for a specific style.">?</div>
+	        <div class='esois_variablestyle'>
+	        	<input type="checkbox" name="variablestyle" id="esois_variablestyle" value="1" {formVariableStyle} > Include Items With Variable Style
+	        	<div class='esois_helpbutton' tooltip="If this is checked the search will include armor/weapons that can be found or crafted in any style.">?</div>
+	        </div>
+	    </div>
+	    <div class='esois_buttons'>
+			<input type="button" class="esois_clearbutton" value="Clear" onclick="esoisResetSearchForm();" />
+			<input type="submit" class="esois_searchbutton" value="Search..." />
+		</div>
+	</div>
+</form>
+
+
+<div id="esois_searchresults" style="display:{searchResultDisplay};">
+	<div id="esois_searchcount">
+		Found {searchCount} matching items.
+	</div>
+	<table id="esois_searchresultstable">
+		{searchResults}
+	</table>
+</div>
+
+{dbQuery}
+
+<script type="text/javascript">
+</script>
+<hr>
+<div id="esoil_footer">
+This content is made available by the <a href="//www.uesp.net">Unofficial Elder Scrolls Pages (UESP)</a>. Contact <a href="mailto:dave@uesp.net">Daveh</a> for information regarding this page.
+Source code for this project is available at <a href="https://github.com/uesp/uesp-esolog">GitHub</a>.
+</div>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>UESP:ESO Sales Data</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoitemlink_embed.css" />
+		<link rel="stylesheet" href="//esolog.uesp.net/resources/esosales.css" />
+		<script type="text/javascript" src="//esolog.uesp.net/resources/jquery-1.10.2.js"></script>
+		<script type="text/javascript" src="//esolog.uesp.net/resources/esosales.js"></script>
+		<script type="text/javascript" src="//en.uesp.net/w/extensions/UespEsoItemLink/uespitemlink.js"></script>
+	</head>
+<body>
+<a class="esovsd_rightheaderlink" href="//www.uesp.net/wiki/UESPWiki:EsoSalesData">Help</a>
+<a class="esovsd_rightheaderlink" href="//www.uesp.net/wiki/UESPWiki_talk:EsoSalesData">Feedback</a>
+<a class="esovsd_rightheaderlink" href="/viewSales.php?view=guilds">View Guilds</a>
+<a class="esovsd_rightheaderlink" href="/salesPrices.shtml">Download Prices</a>
+<a class="esovsd_rightheaderlink" href="/submitMM.php">Submit MM Data</a>
+<br/>
+<div class="esosalesnote">
+	<b>Note:</b> The sales data collector and viewer are in early beta and may not work perfectly. User discretion is advised. See 
+	<a href='//www.uesp.net/wiki/UESPWiki:EsoSalesData'>here</a> for more information on using and contributing sales data and feel free to 
+	<a href='//www.uesp.net/wiki/UESPWiki_talk:EsoSalesData'>report feedback and issues</a>. 
+</div>
+<h1>UESP:ESO Sales Data</h1>
+
+<div id="esovsd_root">
+	<div class="esovsd_searchoptionheader">
+		Use the below options to search for item sales collected from the Elder Scrolls Online.
+	</div>
+	<div id="esovsd_searchform">
+		<form id="eso_sales_search" action="" method="get">
+			<div class='esovsd_inlineblock'>
+		        <label for="text" class="esovsd_label1">Text / Item Link:</label>
+		        <input type="text" name="text" id="esovsd_text" value="{formText}" size="32" maxlength="100" />
+		    </div>
+			<div class='esovsd_inlineblock'>
+		        <label for="level" class="esovsd_label1">Level:</label>
+		        <input name="level" id="esovsd_level" value="{formLevel}" size="10" maxsize="10">
+		    </div>
+		    <div class='esovsd_inlineblock'>
+		        <label for="quality" class="esovsd_label1">Quality:</label>
+		        <select name="quality" id="esovsd_quality">
+		        	{listQuality}
+		        </select>
+		    </div>
+		    <div class='esovsd_inlineblock'>
+		        <label for="trait" class="esovsd_label1">Trait:</label>
+		        <select name="trait" id="esovsd_trait">
+		        	{listTrait}
+		        </select>
+		    </div>
+		    <div class='esovsd_inlineblock'>
+		        <label for="itemtype" class="esovsd_label1">Item Type:</label>
+		        <select name="itemtype" id="esovsd_itemtype">
+		        	{listItemType}
+		        </select>
+		    </div>
+		    <div class='esovsd_inlineblock'>
+		        <label for="equiptype" class="esovsd_label1">Equip Type:</label>
+		        <select name="equiptype" id="esovsd_equiptype">
+		        	{listEquipType}
+		        </select>
+			</div>
+			<div class='esovsd_inlineblock'>
+		    	<label for="weapontype" class="esovsd_label1">Weapon Type:</label>
+		        <select name="weapontype" id="esovsd_weapontype">
+		        	{listWeaponType}
+		        </select>
+			</div>
+			<div class='esovsd_inlineblock'>
+		        <label for="armortype" class="esovsd_label1">Armor Type:</label>
+		        <select name="armortype" id="esovsd_armortype">
+		        	{listArmorType}
+		        </select>
+			</div>
+			<div class="esovsd_inlineblock">
+		        <label for="timeperiod" class="esovsd_label1">Time Period:</label>
+		        <select name="timeperiod" id="esovsd_timeperiod">
+		        	{listTimePeriod}
+		        </select>
+			</div>
+			<div class="esovsd_inlineblock">
+		        <label for="saletype" class="esovsd_label1">Sale Type:</label>
+		        <select name="saletype" id="esovsd_saletype">
+		        	{listSaleType}
+		        </select>
+			</div>
+			<div class="esovsd_inlineblock">
+		        <label for="server" class="esovsd_label1">Server:</label>
+		        <select name="server" id="esovsd_server">
+		        	{listServer}
+		        </select>
+			</div>
+			<div class='esovsd_buttons'>
+				<input type="button" class="esovsd_clearbutton" value="Clear" onclick="EsoSalesResetSearchForm();" />
+				<input type="submit" class="esovsd_searchbutton" value="Search..." />
+			</div>
+		</form>
+	</div>
+	<br/>
+	{errorMessages}
+	{searchResultMessage}
+
+	<div id="esovsd_results">
+		{searchResults}
+	</div>
+	
+	<p />
+	{viewCsvLink}
+</div>
+
+<script type="text/javascript">
+</script>
+
+<!--
+{itemQuery}
+{salesQuery}
+-->
+<hr>
+<div id="esovsd_footer">
+This content is made available by the <a href="//www.uesp.net">Unofficial Elder Scrolls Pages (UESP)</a>. Contact <a href="mailto:dave@uesp.net">Daveh</a> for information regarding this page.
+Source code for this project is available at <a href="https://github.com/uesp/uesp-esolog">GitHub</a>.
+</div>
+</body>
+</html>

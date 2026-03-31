@@ -1,0 +1,121 @@
+body {
+	background-color: #FBEFD5;
+	font-family: sans-serif;
+	font-size: 13px;
+}
+
+#esoil_itemcontainer {
+	display: inline-block;
+}
+
+#esoil_rawdatalist {
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+#esoil_rawdatatable {
+	margin-left: 50px;
+}
+
+table#esoil_rawdatatable td:first-child {
+	text-align: right;
+	font-weight: bold;
+	margin-right: 3px;
+	border-right: solid 3px #ccc;
+	padding: 2px;
+	vertical-align: top;
+}
+
+table#esoil_rawdatatable td {
+	text-align: left;
+	padding: 2px;
+}
+
+table#esoil_rawdatatable tr:hover {
+	background: #eBdFc5;
+}
+
+h1, h2, h3 {
+	margin: 5px;
+}
+
+#esoil_controls {
+	display: inline-block;
+	vertical-align: top;
+	padding: 10px;
+}
+
+.esoil_controllabel {
+	display: inline-block;
+	width: 60px;
+}
+
+.esoil_rangelabel {
+	border: none;
+	background: none;
+}
+
+#esoil_rawdata_iconimage {
+	vertical-align: middle;
+}
+
+
+#esoil_linkcontainer {
+	text-align: center;
+}
+
+
+#esoil_itemimagelink {
+	float: right;
+}
+
+#esoil_datatablelink {
+	float: left;
+}
+
+#esoil_summarylink {
+}
+
+#esoil_rawdata {
+	display: inline-block;
+	vertical-align: top;
+	max-width: 50%;
+}
+
+#esoil_itemsimilarblock {
+	margin-top: 10px;
+}
+
+#esoil_itemsimilarlist {
+	
+}
+
+#esoil_itemsimilarheader {
+	font-size: 1.5em;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+#esoil_footer {
+	color: #777;
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+#esoil_footer a {
+	text-decoration: none;
+	color: #6666ff;
+}
+
+#esoil_footer a:visited {
+	text-decoration: none;
+	color: #996699;
+}
+
+a:hover {
+	background-color: #ccc;
+}
+
+.esoil_rangecontrol {
+	width: 250px;
+}

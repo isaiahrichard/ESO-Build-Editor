@@ -1,0 +1,26 @@
+<div id="esovcpSearchBlockFloat" style="display:{topBarDisplay};">
+	<input type="search" id="esovcpSearchText" value="" size="30" /> 
+	<button id="esovcpSearchButton">Find CP</button>
+	<div id="esovcpSearchResult"></div> 
+</div>
+<a id="esovcpLinkBlock" class="esovcpLinkBlock" href="" style="display:{topBarDisplay};">Link to CP Setup</a>
+
+<div id="esovcpContainer">
+	<div id="esovcpDisciplines" style="width:{discWidth};">
+		{cpDisciplines}
+		<button id="esotvcpResetCP" style="display: {displayResetAllButton} ;">Reset All</button>
+	</div>
+	<div id="esovcpSkills">{cpSkills}</div>
+</div>
+
+<script type="text/javascript">
+	var g_EsoCpSkillDesc = {skillDescJson};
+	var g_EsoCpVersion = '{version}';
+	var g_EsoCpSkills = {skillsJson};
+	var g_EsoCpIsV2 = false;
+	var g_EsoCpIsEdit = {isEdit};
+</script>
+
+<div class="esovpBlockClear"></div>
+<p/>
+<div class="esovcpUpdateDate" style='display: {footerDisplay};'>Champion Point data last updated on {updateDate}.</div>

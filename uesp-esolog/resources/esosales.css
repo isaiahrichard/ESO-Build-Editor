@@ -1,0 +1,267 @@
+body {
+	background-color: #FBEFD5;
+	font-family: sans-serif;
+	font-size: 13px;
+}
+
+#esovsd_root {
+	display: inline-block;
+}
+
+h1, h2, h3 {
+	margin: 5px;
+}
+
+#esovsd_footer {
+	color: #777;
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+#esovsd_footer a {
+	text-decoration: none;
+	color: #6666ff;
+}
+
+#esovsd_footer a:visited {
+	text-decoration: none;
+	color: #996699;
+}
+
+a:hover {
+	background-color: #ccc;
+}
+
+#esovsd_level {
+	width: 136px;
+}
+
+.esovsd_inlineblock {
+	display: inline-block;
+	width: 310px;
+}
+
+.esovsd_searchbutton {
+	float: right;
+	font-weight: bold;
+}
+
+.esovsd_searchbutton:hover {
+}
+
+.esovsd_clearbutton {	
+}
+
+.esovsd_label1 {
+	display: inline-block;
+	width: 100px;
+	text-align: right;
+    margin-bottom: 5px;
+    font-weight: bold;
+	margin-top: 4px;
+}
+
+#esovsd_text {
+	width: 166px;
+}
+
+#esovsd_quality, #esovsd_weapontype , #esovsd_style, #esovsd_itemtype, #esovsd_enchant, #esovsd_timeperiod {
+	width: 170px;
+}
+
+#esovsd_armortype, #esovsd_trait, #esovsd_equiptype, #esovsd_effect, #esovsd_saletype {
+	width: 140px;
+}
+
+.esovsd_buttons {
+	padding-top: 10px;
+}
+
+#esovsd_searchform {
+	width: 640px;
+	border: 1px solid silver;
+	padding: 7px;
+	border-top-width: 0 !important;
+}
+
+.esovsd_searchoptionheader {
+	display: block;
+    width: 100%;
+    background-color: #F5DEB3;
+    border: 1px solid silver;
+    padding: 7px;
+    width: 640px;
+}
+
+#esovsd_searchresults_table {
+	margin-left: 0px;
+    border-collapse: collapse;
+    text-align: center;
+	border: solid 1px lightgray;
+}
+
+.esovsd_itemicon {
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+	padding-right: 5px;
+}
+
+.esovsd_itemlink {
+	vertical-align: middle;
+	display: inline-block;
+}
+
+.esovsd_itemlink:hover {
+	background-color: #ccc;
+}
+
+#esovsd_errormessages {
+	padding: 7px;
+}
+
+#esovsd_searchresults_table tr {
+	border-bottom: 1px solid lightgray;
+    border-top: 1px solid lightgray;
+}
+
+#esovsd_searchresults_table tr:hover {
+	background-color: #ccc;
+}
+
+#esovsd_searchresults_table td {
+	padding: 2px 10px;
+}
+
+#esovsd_searchresults_table th {
+	padding: 2px 10px;
+}
+
+#esovsd_pricestats {
+	background-color: #F5DEB3;
+    border: 1px solid silver;
+    display: block;
+    padding: 7px;
+}
+
+.esovsd_copyprice {
+	display: inline-block;
+	padding: 4px;
+	position: relative;
+	border: solid 1px gray;
+	margin-left: 25px;
+	border-radius: 2px;
+	background-color: #ccc;
+}
+
+.esovsd_copyprice:hover {
+	background-color: #ff9999;
+	cursor: pointer;
+}
+
+.esovsd_copypricesmall {
+	font-size: 11px;
+	margin-left: 5px;
+	padding: 3px;
+}
+
+.esovsd_itemresults {
+}
+
+.esovsd_salesresults {
+}
+
+.esovsd_itemresults td:first-child {
+	text-align: left;
+}
+
+.esovsd_itemresults td:first-child {
+	text-align: left;
+}
+
+.esovsd_itemresults td:nth-child(10) {
+	text-align: right;
+}
+
+.esovsd_salesresults td:last-child {
+	text-align: right;
+}
+
+.esovsd_salesresults td:nth-child(5) {
+	text-align: right;
+}
+
+#esovsd_guildresults_table {
+	margin-left: 0px;
+    border-collapse: collapse;
+    text-align: center;	
+    border: 1px solid lightgray;
+}
+
+#esovsd_guildresults_table tr {
+	border-top: 1px solid lightgray;
+	border-bottom: 1px solid lightgray;
+}
+
+#esovsd_guildresults_table th {
+	padding: 2px 5px;
+}
+
+#esovsd_guildresults_table td:first-child {
+	text-align: left;
+}
+
+.esosalesnote {
+	background-color: #F5DEB3;
+	border: 1px solid lightgray;
+	padding: 5px;
+	margin: 5px; 
+}
+
+.esovsd_outlier {
+	background-color: #ffcccc;
+}
+
+#esovsd_priceindex li {
+	padding-top: 5px;
+	padding-bottom: 2px;
+}
+
+.esovsd_rightheaderlink {
+	float: right;
+	font-weight: bold;
+	padding-right: 10px;
+}
+
+#esovsd_searchformheader {
+	display: inline-block;
+	padding-left: 20px;	
+}
+
+.esovsd_headerlabel1 {
+	font-weight: bold;
+}
+
+#esovsd_headertext {
+}
+
+.esovsdHeaderServer {
+	width: 70px
+}
+
+.esovsdMoreSalesHidden td{
+	text-align: center !important;
+}
+
+#esovsdSalesImage {
+	background-color: black;
+	position: relative;
+}
+
+#esovsdSalesImage > p {
+  position: absolute;
+  text-align: center;
+  top: 290px;
+  left: 300px;
+  color: white;
+}

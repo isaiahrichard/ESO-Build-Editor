@@ -1,0 +1,26 @@
+#
+# Deployment file for the UESP ESO character/build data parser/viewer.
+#
+
+name = uesp.esochardata
+staged = true
+backup = false
+
+ignore = .hg*
+ignore = .git*
+ignore = *.deploy
+ignore = *.sh
+ignore = *.sql
+ignore = *.log
+
+dest = content1.uesp.net:/home/uesp/www/esobuilddata/
+dest = content2.uesp.net:/home/uesp/www/esobuilddata/
+dest = content3.uesp.net:/home/uesp/www/esobuilddata/
+dest = content4.uesp.net:/home/uesp/www/esobuilddata/
+dest = files1.uesp.net:/home/uesp/esochardata.static/
+
+destname = [backup]backup1.uesp.net:/home/uesp/www/esobuilddata/
+destname = [dev]content3.uesp.net:/home/uesp/dev/www/esobuilddata/
+
+# chmod_dest = g+rw -R {dest}
+# chown_dest = -R apache {dest}screenshots

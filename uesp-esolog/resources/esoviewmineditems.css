@@ -1,0 +1,65 @@
+body {
+	background-color: #FBEFD5;
+	font-family: sans-serif;
+	font-size: 13px;
+}
+
+#esovmi_list {
+	font-size: 15px;
+}
+
+ol#esovmi_list li {
+	margin-bottom: 4px;
+	font-weight: bold;
+}
+
+#esovmi_itemlist {
+	font-size: 13px;
+}
+
+ol#esovmi_itemlist li {
+	margin-bottom: 2px;
+}
+
+#esovmi_searchbox {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+}
+
+#esovmi_breadcrumb {
+	
+}
+
+#esovmi_footer {
+	color: #777;
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+#esovmi_footer a {
+	text-decoration: none;
+	color: #6666ff;
+}
+
+#esovmi_footer a:visited {
+	text-decoration: none;
+	color: #996699;
+}
+
+a:hover {
+	background-color: #ccc;
+}
+
+form { 
+	display: inline-block;
+}
+
+#esovmi_versionlist {
+	display: inline-block;
+}
+
+.esovmiCategoryItem {
+	font-size: 15px;
+	font-weight: bold;
+}

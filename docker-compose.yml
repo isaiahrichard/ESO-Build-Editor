@@ -1,0 +1,28 @@
+# Local MySQL for the build editor (rules / effects / computedStats from seed.sql).
+# Usage:
+#   docker compose up -d
+#   ./scripts/run-local-server.sh   # or set UESP_MYSQL_PASSWORD yourself and php -S
+#
+# Default root password matches scripts/run-local-server.sh (override with .env if needed).
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: eso-build-editor-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ESO_MYSQL_ROOT_PASSWORD:-esobuildlocal}
+      MYSQL_DATABASE: esobuilddata
+    ports:
+      - "${ESO_MYSQL_PORT:-3306}:3306"
+    volumes:
+      - eso_build_editor_mysql:/var/lib/mysql
+      - ./uesp-esochardata/seed.sql:/docker-entrypoint-initdb.d/01-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", 'mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+
+volumes:
+  eso_build_editor_mysql:

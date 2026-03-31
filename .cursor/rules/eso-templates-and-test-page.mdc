@@ -1,0 +1,36 @@
+---
+description: "HTML embed templates (esoeditbuild), testBuild.php asset URLs, and how server output becomes browser globals."
+globs:
+  - "**/templates/**/*.txt"
+  - "**/testBuild.php"
+alwaysApply: false
+---
+
+# Templates and `testBuild.php`
+
+## `testBuild.php`
+
+- **Purpose:** Quick local page to instantiate `EsoBuildDataEditor` and print `GetOutputHtml()`.
+- **Remote dependencies:** `<link>` and `<script>` tags point at UESP CDN/wiki URLs (jQuery, `esobuilddata.js`, `uespitemlink.js`, `esoskills.js`, etc.). The **editor core** can still load if DB + local `esoEditBuild.js` work; **search/popup** features may require those hosts.
+- **Teaching note:** The `<script>` at the bottom calls `UpdateEsoCpData` and `UpdateEsoComputedStatsList` after timeout — that is **browser-side** initialization on top of PHP-rendered HTML.
+
+When changing asset URLs, explain **what feature breaks** if that URL 404s (styling only vs skill picker vs item search).
+
+---
+
+## Embed templates (`templates/`)
+
+Templates are **text** (often `.txt`) used by PHP to build HTML. They typically:
+
+- Emit markup for the editor chrome.
+- Contain `<script>` blocks that assign **`g_*` globals** consumed by `esoEditBuild.js`.
+
+**Rule:** Keep **global names** and **JSON structure** in sync with `editBuild.class.php` (what gets substituted) and `esoEditBuild.js` (what gets read). A mismatch is a classic “blank stats” or “undefined is not a function” bug.
+
+---
+
+## Comprehension checks (templates / test page)
+
+- Name two globals the template must define for the stat engine to run.
+- If you comment out a remote `<script>` in `testBuild.php`, how would you verify whether the editor still works?
+- What is the difference between editing the template and editing `esoEditBuild.js` for a typo in a displayed label?

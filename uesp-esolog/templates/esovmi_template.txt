@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>UESP:ESO Mined Items by Category</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="stylesheet" href="//esolog-static.uesp.net/resources/esoviewmineditems.css" />
+		<script type="text/javascript" src="//esolog-static.uesp.net/resources/jquery-1.10.2.js"></script>
+	</head>
+<body>
+<a href="/viewlog.php">Back to Home</a>
+<h1>ESO Mined Items by Category</h1>
+This is a list of Elder Scrolls Online item data mined from the game sorted by item category for update {version}. Return to the <a href="//esoitem.uesp.net/viewlog.php">Main Log Page</a> to view other data.
+<div id="esovmi_versionlist">View data for update {versionList}</div> 
+<h2>{title}</h2>
+<div id="esovmi_searchbox">
+	<form action="" method="get">
+		<input type="input" name="search" maxlength="20" value="{search}"/>
+		<input type="submit" value="Search"/><br />
+		<small>Search All Mined Items</small>
+		<small style="float:right;margin-top:2px;"><a href="/itemSearch.php">Advanced Item Search</a></small>
+	</form>
+</div>
+<div id="esovmi_breadcrumb">{breadCrumb}</div>
+{content}
+<hr>
+<div id="esovmi_footer">
+This content is made available by the <a href="//www.uesp.net">Unofficial Elder Scrolls Pages (UESP)</a>. Contact <a href="mailto:dave@uesp.net">Daveh</a> for information regarding this page.
+Source code for this project is available at <a href="https://github.com/uesp/uesp-esolog">GitHub</a>.
+</div>
+</body>
+</html>
