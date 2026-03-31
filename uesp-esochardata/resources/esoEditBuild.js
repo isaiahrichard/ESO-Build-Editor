@@ -9521,18 +9521,36 @@ window.OnEsoBuildAbilityBlockClick = function (e)
 }
 
 
+window.EsoGetBuildSavePostUrl = function ()
+{
+	if (window.ESO_LOCAL_BUILD_STORAGE && window.ESO_LOCAL_BUILD_STORAGE_URL)
+		return window.ESO_LOCAL_BUILD_STORAGE_URL;
+	return "https://esobuilds.uesp.net/saveBuild.php";
+};
+
+
 window.RequestEsoBuildSave = function ()
 {
 	var saveData = CreateEsoBuildSaveData();
-	
-	$.ajax("https://esobuilds.uesp.net/saveBuild.php", {
-				type: "POST",
-				data: { 
+	var postData = { 
 					savedata: JSON.stringify(saveData), 
 					id: g_EsoBuildData.id,
-				},
-				xhrFields: { withCredentials: true },
-			})
+				};
+	var ajaxOpts = {
+				type: "POST",
+				data: postData,
+			};
+	if (window.ESO_LOCAL_BUILD_STORAGE)
+	{
+		postData.action = "save";
+		ajaxOpts.dataType = "json";
+	}
+	else
+	{
+		ajaxOpts.xhrFields = { withCredentials: true };
+	}
+	
+	$.ajax(EsoGetBuildSavePostUrl(), ajaxOpts)
 		.done(function(data, status, xhr) { OnEsoBuildSaved(data, status, xhr); })
 		.fail(function(xhr, status, errorMsg) { OnEsoBuildSaveError(xhr, status, errorMsg); });
 }
@@ -9541,16 +9559,26 @@ window.RequestEsoBuildSave = function ()
 window.RequestEsoBuildCreateCopy = function ()
 {
 	var saveData = CreateEsoBuildSaveData();
-	
-	$.ajax("https://esobuilds.uesp.net/saveBuild.php", {
-				type: "POST",
-				data: { 
+	var postData = { 
 					savedata: JSON.stringify(saveData), 
 					id: g_EsoBuildData.id, 
 					copy: 1,
-				},
-				xhrFields: { withCredentials: true },
-			})
+				};
+	var ajaxOpts = {
+				type: "POST",
+				data: postData,
+			};
+	if (window.ESO_LOCAL_BUILD_STORAGE)
+	{
+		postData.action = "save";
+		ajaxOpts.dataType = "json";
+	}
+	else
+	{
+		ajaxOpts.xhrFields = { withCredentials: true };
+	}
+	
+	$.ajax(EsoGetBuildSavePostUrl(), ajaxOpts)
 		.done(function(data, status, xhr) { OnEsoBuildCopy (data, status, xhr); })
 		.fail(function(xhr, status, errorMsg) { OnEsoBuildCopyError(xhr, status, errorMsg); });
 }
@@ -9558,6 +9586,9 @@ window.RequestEsoBuildCreateCopy = function ()
 
 window.OnEsoBuildSaved = function (data, status, xhr)
 {
+	if (typeof data === "string") {
+		try { data = JSON.parse(data); } catch (e) { SetEsoBuildSaveResults("ERROR saving build!"); return; }
+	}
 	if (!data.success)
 	{
 		SetEsoBuildSaveResults("ERROR saving build!");
@@ -9566,6 +9597,12 @@ window.OnEsoBuildSaved = function (data, status, xhr)
 	{
 		UpdateEsoBuildNewId(data.id);
 		SetEsoBuildSaveResults("Successfully created new build! Reloading....");
+		
+		if (window.ESO_LOCAL_BUILD_STORAGE)
+		{
+			window.location.href = window.location.pathname + "?localBuildId=" + encodeURIComponent(data.id);
+			return;
+		}
 		
 		var currentUrl = window.location.href;
 		var newUrl = currentUrl.replace(/&id=[0-9]+/, "").replace(/[?]id=[0-9]+/, "?");
@@ -9587,6 +9624,9 @@ window.OnEsoBuildSaved = function (data, status, xhr)
 
 window.OnEsoBuildCopy = function (data, status, xhr)
 {
+	if (typeof data === "string") {
+		try { data = JSON.parse(data); } catch (e) { SetEsoBuildSaveResults("ERROR copying build!"); return; }
+	}
 	if (!data.success)
 	{
 		SetEsoBuildSaveResults("ERROR copying build!");
@@ -9595,6 +9635,12 @@ window.OnEsoBuildCopy = function (data, status, xhr)
 	
 	UpdateEsoBuildNewId(data.id);
 	SetEsoBuildSaveResults("Successfully created new build! Reloading...");
+	
+	if (window.ESO_LOCAL_BUILD_STORAGE)
+	{
+		window.location.href = window.location.pathname + "?localBuildId=" + encodeURIComponent(data.id);
+		return;
+	}
 	
 	var currentUrl = window.location.href;
 	var newUrl = currentUrl.replace(/&id=[0-9]+/, "").replace(/[?]id=[0-9]+/, "?");
@@ -10446,6 +10492,26 @@ window.OnEsoBuildSave = function (e)
 
 window.OnEsoBuildDelete = function (e)
 {
+	if (window.ESO_LOCAL_BUILD_STORAGE && window.ESO_LOCAL_BUILD_STORAGE_URL)
+	{
+		var bid = parseInt(g_EsoBuildData.id, 10);
+		if (isNaN(bid) || bid <= 0) return;
+		SetEsoBuildSaveResults("Deleting build...");
+		$.ajax(window.ESO_LOCAL_BUILD_STORAGE_URL, {
+			type: "POST",
+			dataType: "json",
+			data: { action: "delete", id: bid },
+		}).done(function (data) {
+			if (data && data.success)
+				window.location.href = window.location.pathname;
+			else
+				SetEsoBuildSaveResults("ERROR deleting build!");
+		}).fail(function () {
+			SetEsoBuildSaveResults("ERROR deleting build!");
+		});
+		return;
+	}
+	
 	var $form = $('<form>', {
         action: '//en.uesp.net/wiki/Special:EsoBuildData',
         method: 'post'
@@ -10476,6 +10542,279 @@ window.OnEsoBuildCreateCopy = function (e)
 
 	setTimeout(RequestEsoBuildCreateCopy, 50);
 }
+
+
+window.EsoParseItemIdFromItemLink = function (link)
+{
+	if (link == null || typeof link !== "string") return null;
+	var m = link.match(/:item:([0-9]+):/);
+	return m ? parseInt(m[1], 10) : null;
+};
+
+
+window.EsoApplyLocalSaveDataStatToDom = function (statId, value)
+{
+	if (statId == null || statId.indexOf("Computed:") === 0) return;
+	var $el = $("[statid]").filter(function () { return $(this).attr("statid") === statId; }).first();
+	if ($el.length === 0) return;
+	var node = $el.get(0);
+	if (node.tagName === "INPUT" && node.type === "checkbox")
+	{
+		$el.prop("checked", value === "1" || value === 1 || value === true);
+	}
+	else if (node.tagName === "SELECT" || (node.tagName === "INPUT" && node.type !== "checkbox"))
+	{
+		$el.val(String(value));
+	}
+	else if (node.tagName === "DIV")
+	{
+		$el.text(String(value));
+	}
+};
+
+
+window.EsoApplyLocalSavedataTogglesFromStats = function (stats)
+{
+	if (stats == null) return;
+	var sk;
+	for (sk in stats)
+	{
+		if (sk.indexOf("ToggleSet:") === 0)
+		{
+			var n = sk.replace("ToggleSet:", "");
+			if (g_EsoBuildToggledSetData[n])
+				g_EsoBuildToggledSetData[n].enabled = stats[sk] === "1";
+			var ckey = sk + ":Count";
+			if (stats[ckey] != null && g_EsoBuildToggledSetData[n] && g_EsoBuildToggledSetData[n].maxTimes != null)
+				g_EsoBuildToggledSetData[n].count = parseInt(stats[ckey], 10);
+		}
+		else if (sk.indexOf("ToggleCp:") === 0)
+		{
+			var cn = sk.replace("ToggleCp:", "");
+			if (g_EsoBuildToggledCpData[cn])
+				g_EsoBuildToggledCpData[cn].enabled = stats[sk] === "1";
+			var cpCountKey = sk + ":Count";
+			if (stats[cpCountKey] != null && g_EsoBuildToggledCpData[cn] && g_EsoBuildToggledCpData[cn].maxTimes != null)
+				g_EsoBuildToggledCpData[cn].count = parseInt(stats[cpCountKey], 10);
+		}
+		else if (sk.indexOf("ToggleSkill:") === 0)
+		{
+			var sn = sk.replace("ToggleSkill:", "");
+			if (g_EsoBuildToggledSkillData[sn])
+				g_EsoBuildToggledSkillData[sn].enabled = stats[sk] === "1";
+			var scKey = sk + ":Count";
+			if (stats[scKey] != null && g_EsoBuildToggledSkillData[sn] && g_EsoBuildToggledSkillData[sn].maxTimes != null)
+				g_EsoBuildToggledSkillData[sn].count = parseInt(stats[scKey], 10);
+		}
+	}
+};
+
+
+window.EsoApplyLocalSavedataBuffs = function (buffs)
+{
+	if (buffs == null) return;
+	for (var buffName in buffs)
+	{
+		var b = buffs[buffName];
+		var buffData = g_EsoBuildBuffData[buffName];
+		if (buffData == null || b == null) continue;
+		var en = parseInt(b.enabled, 10);
+		if (isNaN(en)) en = 0;
+		buffData.enabled = (en & 1) !== 0;
+		buffData.skillEnabled = (en & 2) !== 0;
+		buffData.buffEnabled = (en & 4) !== 0;
+		if (b.count != null) buffData.count = parseInt(b.count, 10);
+	}
+};
+
+
+window.EsoApplyLocalSavedataChampionPoints = function (cps)
+{
+	if (cps == null) return;
+	for (var cpId in cps)
+	{
+		var rec = cps[cpId];
+		if (g_EsoCpData[cpId] == null || rec == null) continue;
+		if (rec.points != null)
+			g_EsoCpData[cpId].points = parseInt(rec.points, 10);
+	}
+};
+
+
+window.EsoApplyLocalSavedataActionBars = function (actionBars)
+{
+	if (actionBars == null) return;
+	for (var idx in actionBars)
+	{
+		var ab = actionBars[idx];
+		var index = parseInt(idx, 10);
+		if (isNaN(index)) continue;
+		var barIndex = Math.floor((index - 3) / 100);
+		var slotIndex = (index - 3) % 100;
+		if (barIndex < 0 || barIndex > 3 || slotIndex < 0 || slotIndex > 5) continue;
+		var abilityId = parseInt(ab.abilityId, 10) || 0;
+		var iconEl = $("#esovsSkillBar .esovsSkillBar[skillbar='" + (barIndex + 1) + "']").find(".esovsSkillBarIcon[skillindex='" + (slotIndex + 1) + "']");
+		if (iconEl.length === 0) continue;
+		if (abilityId > 0 && g_SkillsData[abilityId] != null)
+		{
+			var sd = g_SkillsData[abilityId];
+			iconEl.attr("skillid", abilityId);
+			iconEl.attr("origskillid", abilityId);
+			var iconName = (sd.texture || "").replace(".dds", ".png");
+			iconEl.attr("src", EsoResolveIconUrl(iconName));
+		}
+		else
+		{
+			iconEl.attr("skillid", "0");
+			iconEl.attr("origskillid", "0");
+			iconEl.attr("src", "//esoicons.uesp.net/blank.png");
+		}
+	}
+};
+
+
+window.EsoApplyLocalSavedataEquipSlotsAsync = function (equipSlots, onDone)
+{
+	var keys = [];
+	for (var k in equipSlots) keys.push(k);
+	var i = 0;
+	function next()
+	{
+		if (i >= keys.length)
+		{
+			if (onDone) onDone();
+			return;
+		}
+		var slotId = keys[i++];
+		var row = equipSlots[slotId];
+		if (row == null || row.itemLink == null || row.itemLink === "")
+		{
+			next();
+			return;
+		}
+		var itemId = EsoParseItemIdFromItemLink(row.itemLink);
+		if (itemId == null || itemId <= 0)
+		{
+			next();
+			return;
+		}
+		var level = parseInt(row.level, 10);
+		var quality = parseInt(row.quality, 10);
+		var equipType = parseInt(row.equipType, 10);
+		if (isNaN(level) || isNaN(quality) || isNaN(equipType))
+		{
+			next();
+			return;
+		}
+		var intData = GetEsoIntDataFromLevelQuality(level, quality, equipType);
+		if (intData == null)
+		{
+			next();
+			return;
+		}
+		var tempItemData = {};
+		tempItemData.itemId = itemId;
+		tempItemData.level = level;
+		tempItemData.quality = quality;
+		tempItemData.internalLevel = intData.level;
+		tempItemData.internalSubtype = intData.type;
+		var element = $("#esotbItem" + slotId);
+		if (element.length === 0)
+		{
+			next();
+			return;
+		}
+		var queryParams = {
+			"table" : "minedItem",
+			"id" : itemId,
+			"intlevel" : intData.level,
+			"inttype" : intData.type,
+			"limit" : 1,
+		};
+		if (g_EsoBuildLastInputValues && g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
+		$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), { data: queryParams })
+			.done(function (data, status, xhr) {
+				OnEsoItemDataReceive(data, status, xhr, element, tempItemData);
+				next();
+			})
+			.fail(function () { next(); });
+	}
+	next();
+};
+
+
+window.ApplyEsoLocalBuildSaveData = function (saveData)
+{
+	if (saveData == null) return;
+	if (saveData.Build != null)
+	{
+		if (saveData.Build.id != null)
+		{
+			g_EsoBuildData.id = parseInt(saveData.Build.id, 10);
+		}
+	}
+	if (saveData.Stats != null)
+	{
+		var st;
+		for (st in saveData.Stats)
+		{
+			EsoApplyLocalSaveDataStatToDom(st, saveData.Stats[st]);
+		}
+		EsoApplyLocalSavedataTogglesFromStats(saveData.Stats);
+	}
+	EsoApplyLocalSavedataBuffs(saveData.Buffs);
+	EsoApplyLocalSavedataChampionPoints(saveData.ChampionPoints);
+	EsoApplyLocalSavedataActionBars(saveData.ActionBars);
+	UpdateEsoSkillBarData();
+	UpdateEsoSubclassData();
+	CopyEsoSkillsToItemTab();
+	UpdateEsoCpData();
+	UpdateEsoInitialBuffData();
+	UpdateEsoInitialToggleSetData();
+	UpdateEsoInitialToggleCpData();
+	UpdateEsoInitialToggleSkillData();
+	EsoApplyLocalSavedataEquipSlotsAsync(saveData.EquipSlots || {}, function () {
+		UpdateEsoBuildItemLinkSetCounts();
+		UpdateEsoComputedStatsList(true);
+		$(document).trigger("esocpUpdate");
+		SetEsoBuildSaveResults("Loaded local build.");
+		OnLeaveEsoSkillBarIcon();
+	});
+};
+
+
+window.OnEsoLoadLocalBuildClick = function (e)
+{
+	if (!window.ESO_LOCAL_BUILD_STORAGE_URL) return;
+	SetEsoBuildSaveResults("Loading build list...");
+	$.ajax(window.ESO_LOCAL_BUILD_STORAGE_URL, { data: { action: "list" }, dataType: "json" })
+		.done(function (data) {
+			if (!data || !data.success || !data.builds || data.builds.length === 0)
+			{
+				SetEsoBuildSaveResults("No saved local builds yet.");
+				return;
+			}
+			var lines = [];
+			for (var i = 0; i < data.builds.length; i++)
+			{
+				var b = data.builds[i];
+				lines.push(b.id + ": " + (b.name || "Build"));
+			}
+			var choice = window.prompt("Enter build id to load:\n\n" + lines.join("\n"), data.builds[0].id);
+			if (choice == null || choice === "") return;
+			var lid = parseInt(choice, 10);
+			if (isNaN(lid) || lid <= 0)
+			{
+				SetEsoBuildSaveResults("Invalid id.");
+				return;
+			}
+			SetEsoBuildSaveResults("Loading...");
+			window.location.href = window.location.pathname + "?localBuildId=" + encodeURIComponent(lid);
+		})
+		.fail(function () {
+			SetEsoBuildSaveResults("Could not list local builds.");
+		});
+};
 
 
 window.EsoBuildLog = function ()
@@ -15195,6 +15534,8 @@ window.esotbOnDocReady = function ()
 	$("#esotbSaveButton").click(OnEsoBuildSave);
 	$("#esotbCreateCopyButton").click(OnEsoBuildCreateCopy);
 	$("#esotbDeleteButton").click(OnEsoBuildDelete);
+	if (window.ESO_LOCAL_BUILD_STORAGE)
+		$("#esotbLoadLocalBuildButton").show().off("click").on("click", OnEsoLoadLocalBuildClick);
 	
 	$('#esotbItemSetupEquipSet').focusin(function() {
 	    	$('#esotbItemSetupEquipSet').val('');
@@ -15237,8 +15578,18 @@ window.esotbOnDocReady = function ()
 	
 	g_EsoBuildEnableUpdates = true;
 	
-	UpdateEsoComputedStatsList(true);
-	OnLeaveEsoSkillBarIcon();
+	if (window.g_EsoLocalSavedata)
+	{
+		var sd = window.g_EsoLocalSavedata;
+		delete window.g_EsoLocalSavedata;
+		UpdateEsoComputedStatsList(true);
+		ApplyEsoLocalBuildSaveData(sd);
+	}
+	else
+	{
+		UpdateEsoComputedStatsList(true);
+		OnLeaveEsoSkillBarIcon();
+	}
 }
 
 

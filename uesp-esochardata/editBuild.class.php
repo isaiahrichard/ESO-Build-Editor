@@ -3922,6 +3922,10 @@ class EsoBuildDataEditor
 				$buildData[$key] = $value;
 			}
 		}
+		else if ($this->buildId != null && $this->buildId > 0)
+		{
+			$buildData['id'] = (int) $this->buildId;
+		}
 		
 		$buildData['wikiUserName'] = $this->GetWikiUserName();
 		$buildData['canEdit'] = $this->buildDataViewer->canWikiUserEdit();
@@ -3942,6 +3946,8 @@ class EsoBuildDataEditor
 	{
 		if ($this->READONLY) return "disabled";
 		
+		if (getenv('ESO_LOCAL_BUILD_STORAGE') === '1') return "";
+		
 		if ($this->buildId <= 0)
 			$canEdit = $this->buildDataViewer->canWikiUserCreate();
 		else
@@ -3956,6 +3962,9 @@ class EsoBuildDataEditor
 	{
 		if ($this->READONLY) return "disabled";
 		
+		if (getenv('ESO_LOCAL_BUILD_STORAGE') === '1')
+			return ($this->buildId <= 0) ? "disabled" : "";
+		
 		if ($this->buildId < 0)
 			$canCreate = false;
 		else
@@ -3969,6 +3978,9 @@ class EsoBuildDataEditor
 	public function GetDeleteButtonDisabled()
 	{
 		if ($this->READONLY) return "disabled";
+		
+		if (getenv('ESO_LOCAL_BUILD_STORAGE') === '1')
+			return ($this->buildId <= 0) ? "disabled" : "";
 		
 		if ($this->buildId < 0)
 			$canDelete = false;
