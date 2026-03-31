@@ -39,18 +39,30 @@
  * Large exports: default memory_limit is raised for this process. Skip writing data/uesp-export/mined-export.json
  * (saves a full json_encode of the payload) with --no-cache if you still hit limits or only care about MySQL.
  *
+ * Slow HTTPS / system curl timeouts: export JSON uses UESP_ESO_EXPORT_HTTP_TIMEOUT (seconds, default 900, max 7200).
+ * Example: UESP_ESO_EXPORT_HTTP_TIMEOUT=1800 php scripts/import-mined-data.php --only-item-search
+ * If system curl fails with exit 18 (transfer closed early), we use HTTP/1.1 and retry; tune UESP_ESO_EXPORT_CURL_RETRIES (1–10, default 3).
+ *
  * With --from-file only: each run imports whatever non-empty tables appear in your JSON (others are not truncated).
  * Example: --from-file=minedSkills.json updates minedSkills only; combine multiple --from-file to merge tables first.
  *
  * Local item search / set picker (/_esolog_api/ + minedItemSummary + minedItem):
  *   php scripts/import-mined-data.php --only-item-search
+ * HTTP import uses two sequential exportJson requests (summary, then minedItem) to avoid one huge download.
  * If Cloudflare blocks PHP, save JSON from a logged-in browser, then:
  *   php scripts/import-mined-data.php --only-item-search --from-file=data/uesp-export/items.json
- * Browser URL:
+ * If minedItem never appears in MySQL, see scripts/MINED_ITEMS.md (browser JSON, mysqldump, PHP curl).
+ *
+ * Browser URL (single file with both tables is fine for --from-file):
  *   https://esolog.uesp.net/exportJson.php?version=49&table%5B%5D=minedItemSummary&table%5B%5D=minedItem
  * After a normal import, add items without re-fetching CP/skills:
  *   php scripts/import-mined-data.php --with-item-search
  * Optional: --item-from-file=items.json with --with-item-search (uses file instead of HTTP for item tables).
+ *
+ * Fill minedItem using itemIds from local minedItemSummary (exportJson requires ids= for minedItem):
+ *   php scripts/import-mined-data.php --backfill-mined-item-from-summary
+ * Optional: --backfill-batch-size=80 --backfill-sleep-ms=250
+ * Env: UESP_ESO_MINED_ITEM_ID_BATCH (default 80), UESP_ESO_MINED_ITEM_BACKFILL_SLEEP_MS
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -78,6 +90,9 @@ $skipMinedSkills = false;
 $noCache = false;
 $onlyItemSearch = false;
 $withItemSearch = false;
+$backfillMinedItemFromSummary = false;
+$backfillBatchSize = 0;
+$backfillSleepMs = -1;
 
 foreach (array_slice($argv, 1) as $arg) {
 	if (preg_match('/^--version=(.+)$/', $arg, $m)) {
@@ -90,6 +105,12 @@ foreach (array_slice($argv, 1) as $arg) {
 		$onlyItemSearch = true;
 	} elseif ($arg === '--with-item-search') {
 		$withItemSearch = true;
+	} elseif ($arg === '--backfill-mined-item-from-summary') {
+		$backfillMinedItemFromSummary = true;
+	} elseif (preg_match('/^--backfill-batch-size=(\d+)$/', $arg, $m)) {
+		$backfillBatchSize = (int) $m[1];
+	} elseif (preg_match('/^--backfill-sleep-ms=(\d+)$/', $arg, $m)) {
+		$backfillSleepMs = (int) $m[1];
 	} elseif (preg_match('/^--from-file=(.+)$/', $arg, $m)) {
 		$path = $m[1];
 		if ($path[0] !== '/' && !preg_match('#^[A-Za-z]:\\\\#', $path)) {
@@ -110,6 +131,11 @@ foreach (array_slice($argv, 1) as $arg) {
 
 if ($onlyItemSearch && $withItemSearch) {
 	fwrite(STDERR, "Use either --only-item-search or --with-item-search, not both.\n");
+	exit(1);
+}
+
+if ($backfillMinedItemFromSummary && ($onlyItemSearch || $withItemSearch)) {
+	fwrite(STDERR, "Do not combine --backfill-mined-item-from-summary with --only-item-search or --with-item-search.\n");
 	exit(1);
 }
 
@@ -207,20 +233,32 @@ function uesp_ensure_mined_item_table(mysqli $db, string $table, array $rows): v
 /**
  * @param list<array<string,mixed>> $rows
  */
-function uesp_bulk_insert(mysqli $db, string $table, array $rows, int $batchSize = 12)
+function uesp_bulk_insert(mysqli $db, string $table, array $rows, int $batchSize = 12, bool $doTruncate = true)
 {
 	if (empty($rows)) {
 		echo "  (no rows for $table)\n";
+		uesp_eso_cli_progress_log("bulk_insert: $table — no rows, skipping");
 		return;
 	}
+	$rowCount = count($rows);
+	uesp_eso_cli_progress_log("bulk_insert: $table — $rowCount rows, batch size $batchSize");
 	$cols = array_keys($rows[0]);
 	$colSql = uesp_sql_backtick_cols($cols);
 	$tableEsc = '`' . str_replace('`', '``', $table) . '`';
 
-	$db->query("TRUNCATE TABLE $tableEsc");
+	if ($doTruncate) {
+		uesp_eso_cli_progress_log("bulk_insert: $table — TRUNCATE...");
+		if (!$db->query("TRUNCATE TABLE $tableEsc")) {
+			fwrite(STDERR, "TRUNCATE failed ($table): " . $db->error . "\n");
+			exit(1);
+		}
+	}
+	uesp_eso_cli_progress_log("bulk_insert: $table — inserting...");
 
 	$batch = array();
 	$n = 0;
+	$batchesDone = 0;
+	$progressEvery = max(1, (int) (5000 / max(1, $batchSize)));
 	foreach ($rows as $row) {
 		$vals = array();
 		foreach ($cols as $c) {
@@ -234,7 +272,11 @@ function uesp_bulk_insert(mysqli $db, string $table, array $rows, int $batchSize
 				fwrite(STDERR, "INSERT batch failed ($table): " . $db->error . "\n");
 				exit(1);
 			}
+			++$batchesDone;
 			$batch = array();
+			if ($batchesDone % $progressEvery === 0) {
+				uesp_eso_cli_progress_log("bulk_insert: $table — $n / $rowCount rows committed");
+			}
 		}
 	}
 	if (count($batch) > 0) {
@@ -244,6 +286,7 @@ function uesp_bulk_insert(mysqli $db, string $table, array $rows, int $batchSize
 			exit(1);
 		}
 	}
+	uesp_eso_cli_progress_log("bulk_insert: $table — done, $n rows total");
 	echo "Inserted $n rows into $table\n";
 }
 
@@ -257,12 +300,16 @@ function uesp_load_item_search_payload(string $root, string $version, array $ite
 	$data = array();
 
 	if (count($itemFromFiles) > 0) {
+		uesp_eso_cli_progress_log('item search: reading ' . count($itemFromFiles) . ' JSON file(s) (no HTTP)');
 		foreach ($itemFromFiles as $fromFile) {
 			if (!is_readable($fromFile)) {
 				fwrite(STDERR, "Cannot read file: $fromFile\n");
 				exit(1);
 			}
-			$chunk = json_decode(file_get_contents($fromFile), true);
+			uesp_eso_cli_progress_log('item search: loading ' . $fromFile . ' ...');
+			$rawFile = file_get_contents($fromFile);
+			uesp_eso_cli_progress_log('item search: ' . basename($fromFile) . ' read, ' . strlen($rawFile) . ' bytes, json_decode...');
+			$chunk = json_decode($rawFile, true);
 			if (!is_array($chunk)) {
 				fwrite(STDERR, "Invalid JSON in $fromFile\n");
 				exit(1);
@@ -272,6 +319,7 @@ function uesp_load_item_search_payload(string $root, string $version, array $ite
 					$data[$t] = $chunk[$t];
 				}
 			}
+			uesp_eso_cli_progress_log('item search: parsed ' . basename($fromFile));
 			echo "Loaded item table keys from $fromFile\n";
 		}
 		return count($data) > 0 ? $data : null;
@@ -281,11 +329,13 @@ function uesp_load_item_search_payload(string $root, string $version, array $ite
 		define('UESP_ESO_REMOTE_EXPORT_JSON_URL', 'https://esolog.uesp.net/exportJson.php');
 	}
 	echo "Fetching minedItemSummary + minedItem from UESP (version=$version)...\n";
-	return uesp_eso_fetch_export_json_via_http($version, $itemKeys, true);
+	uesp_eso_cli_progress_log('item search: two HTTP requests (summary, then minedItem) — see exportJson lines below');
+	return uesp_eso_fetch_item_search_tables_http($version, true);
 }
 
 function uesp_import_item_search_tables(mysqli $db, string $root, string $version, array $itemFromFiles): void
 {
+	uesp_eso_cli_progress_log('item search: fetching payload...');
 	$data = uesp_load_item_search_payload($root, $version, $itemFromFiles);
 	if ($data === null || empty($data['minedItemSummary']) || !is_array($data['minedItemSummary'])) {
 		fwrite(STDERR, "Item search import failed: need non-empty minedItemSummary.\n");
@@ -296,19 +346,124 @@ function uesp_import_item_search_tables(mysqli $db, string $root, string $versio
 	}
 	if (empty($data['minedItem']) || !is_array($data['minedItem'])) {
 		echo "Warning: minedItem missing or empty — item search works; equipping some sets may fail until minedItem is imported.\n";
+		fwrite(STDERR, "How to get minedItem: see scripts/MINED_ITEMS.md\n");
+		fwrite(STDERR, '  - Browser: save JSON from exportJson (confirm the file contains a large "minedItem" array).' . "\n");
+		fwrite(STDERR, "  - Or mysqldump minedItem+minedItemSummary from any MySQL that has them, then mysql < dump.sql\n");
 	}
 
+	$summaryCount = count($data['minedItemSummary']);
+	$itemCount = (!empty($data['minedItem']) && is_array($data['minedItem'])) ? count($data['minedItem']) : 0;
+	uesp_eso_cli_progress_log("item search: got minedItemSummary=$summaryCount rows, minedItem=$itemCount rows");
+
+	uesp_eso_cli_progress_log('item search: normalizing minedItemSummary (can take a while)...');
+	$normSummary = uesp_normalize_export_rows($data['minedItemSummary']);
+	uesp_eso_cli_progress_log('item search: CREATE TABLE minedItemSummary if needed...');
 	uesp_ensure_mined_item_table($db, 'minedItemSummary', $data['minedItemSummary']);
-	uesp_bulk_insert($db, 'minedItemSummary', uesp_normalize_export_rows($data['minedItemSummary']), 25);
+	uesp_bulk_insert($db, 'minedItemSummary', $normSummary, 25);
 
 	if (!empty($data['minedItem']) && is_array($data['minedItem'])) {
+		uesp_eso_cli_progress_log('item search: normalizing minedItem...');
+		$normItem = uesp_normalize_export_rows($data['minedItem']);
+		uesp_eso_cli_progress_log('item search: CREATE TABLE minedItem if needed...');
 		uesp_ensure_mined_item_table($db, 'minedItem', $data['minedItem']);
-		uesp_bulk_insert($db, 'minedItem', uesp_normalize_export_rows($data['minedItem']), 6);
+		uesp_bulk_insert($db, 'minedItem', $normItem, 6);
 	}
 }
 
-if ($onlyItemSearch) {
+/**
+ * Populate minedItem via exportJson using distinct itemId values from local minedItemSummary.
+ * exportJson requires ids= for minedItem; bulk table=minedItem alone returns "Missing required item id!".
+ */
+function uesp_backfill_mined_item_from_summary(mysqli $db, string $version, int $batchSize, int $sleepMs): void
+{
+	if (!defined('UESP_ESO_REMOTE_EXPORT_JSON_URL') || UESP_ESO_REMOTE_EXPORT_JSON_URL === '') {
+		define('UESP_ESO_REMOTE_EXPORT_JSON_URL', 'https://esolog.uesp.net/exportJson.php');
+	}
+
+	$res = $db->query('SELECT DISTINCT itemId FROM minedItemSummary WHERE itemId > 0 ORDER BY itemId');
+	if ($res === false) {
+		fwrite(STDERR, 'backfill: query failed: ' . $db->error . "\n");
+		exit(1);
+	}
+	$ids = array();
+	while ($row = $res->fetch_assoc()) {
+		$ids[] = (int) $row['itemId'];
+	}
+	$res->free();
+
+	if (count($ids) === 0) {
+		fwrite(STDERR, "backfill: no itemIds in minedItemSummary. Run --only-item-search first.\n");
+		exit(1);
+	}
+
+	$nIds = count($ids);
+	uesp_eso_cli_progress_log("backfill minedItem: $nIds distinct itemIds, batch size $batchSize");
+
+	$chunks = array_chunk($ids, max(1, $batchSize));
+	$nChunks = count($chunks);
+	$tableEnsured = false;
+	$firstWrite = true;
+	$totalRows = 0;
+
+	for ($ci = 0; $ci < $nChunks; ++$ci) {
+		$chunk = $chunks[$ci];
+		$idList = implode(',', $chunk);
+		uesp_eso_cli_progress_log('backfill minedItem: chunk ' . ($ci + 1) . "/$nChunks (" . count($chunk) . ' ids)...');
+
+		$data = uesp_eso_fetch_export_json_via_http($version, array('minedItem'), true, array('ids' => $idList));
+		if ($data === null) {
+			fwrite(STDERR, 'backfill: HTTP failed on chunk ' . ($ci + 1) . ". Try smaller --backfill-batch-size or use browser + --from-file.\n");
+			exit(1);
+		}
+		if (empty($data['minedItem']) || !is_array($data['minedItem'])) {
+			uesp_eso_cli_progress_log('backfill minedItem: chunk ' . ($ci + 1) . ' — no rows (skipped)');
+			if ($sleepMs > 0 && $ci + 1 < $nChunks) {
+				usleep($sleepMs * 1000);
+			}
+			continue;
+		}
+
+		$rawRows = $data['minedItem'];
+		$norm = uesp_normalize_export_rows($rawRows);
+		if (!$tableEnsured) {
+			uesp_ensure_mined_item_table($db, 'minedItem', $rawRows);
+			$tableEnsured = true;
+		}
+		$totalRows += count($norm);
+		uesp_bulk_insert($db, 'minedItem', $norm, 6, $firstWrite);
+		$firstWrite = false;
+
+		if ($sleepMs > 0 && $ci + 1 < $nChunks) {
+			usleep($sleepMs * 1000);
+		}
+	}
+
+	if (!$tableEnsured) {
+		fwrite(STDERR, "backfill: API returned no minedItem rows for any chunk.\n");
+		exit(1);
+	}
+
+	echo "Backfill minedItem finished: about $totalRows row(s) inserted in $nChunks chunk(s).\n";
+}
+
+if ($backfillMinedItemFromSummary) {
 	global $uespEsoLogReadDBHost, $uespEsoLogReadUser, $uespEsoLogReadPW, $uespEsoLogDatabase;
+
+	$batchSz = $backfillBatchSize > 0 ? $backfillBatchSize : (int) (getenv('UESP_ESO_MINED_ITEM_ID_BATCH') ?: 80);
+	if ($batchSz < 1) {
+		$batchSz = 80;
+	}
+	if ($batchSz > 250) {
+		fwrite(STDERR, "Warning: batch size $batchSz may hit URL/proxy limits; try 80–150 if requests fail.\n");
+	}
+
+	$slp = $backfillSleepMs >= 0 ? $backfillSleepMs : (int) (getenv('UESP_ESO_MINED_ITEM_BACKFILL_SLEEP_MS') ?: 0);
+	if ($slp < 0) {
+		$slp = 0;
+	}
+
+	uesp_eso_cli_progress_log('--backfill-mined-item-from-summary: version=' . $version);
+	uesp_eso_cli_progress_log('MySQL: connecting to ' . $uespEsoLogReadDBHost . ' database ' . $uespEsoLogDatabase . ' ...');
 
 	$db = new mysqli($uespEsoLogReadDBHost, $uespEsoLogReadUser, $uespEsoLogReadPW, $uespEsoLogDatabase);
 	if ($db->connect_error) {
@@ -316,8 +471,31 @@ if ($onlyItemSearch) {
 		exit(1);
 	}
 	$db->set_charset('utf8mb4');
+	uesp_eso_cli_progress_log('MySQL: connected');
+
+	uesp_backfill_mined_item_from_summary($db, $version, $batchSz, $slp);
+	$db->close();
+	exit(0);
+}
+
+if ($onlyItemSearch) {
+	global $uespEsoLogReadDBHost, $uespEsoLogReadUser, $uespEsoLogReadPW, $uespEsoLogDatabase;
+
+	uesp_eso_cli_progress_log("--only-item-search: version=$version");
+	uesp_eso_cli_progress_log('MySQL: connecting to ' . $uespEsoLogReadDBHost . ' database ' . $uespEsoLogDatabase . ' ...');
+
+	$db = new mysqli($uespEsoLogReadDBHost, $uespEsoLogReadUser, $uespEsoLogReadPW, $uespEsoLogDatabase);
+	if ($db->connect_error) {
+		fwrite(STDERR, 'MySQL connect failed: ' . $db->connect_error . "\n");
+		exit(1);
+	}
+	$db->set_charset('utf8mb4');
+	uesp_eso_cli_progress_log('MySQL: connected');
 
 	$filesForItems = count($itemFromFiles) > 0 ? $itemFromFiles : $fromFiles;
+	if (count($filesForItems) > 0) {
+		uesp_eso_cli_progress_log('item search: using file(s): ' . implode(', ', $filesForItems));
+	}
 	uesp_import_item_search_tables($db, $root, $version, $filesForItems);
 	$db->close();
 	echo "Item search tables ready. Restart php -S and try the set/item picker again.\n";

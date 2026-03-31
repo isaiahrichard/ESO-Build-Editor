@@ -5258,7 +5258,8 @@ window.OnEsoSelectItem = function (itemData, element)
 	
 	g_EsoBuildItemData[slotId] = itemData;
 	
-	RequestEsoItemData(itemData, element);
+	if (!RequestEsoItemData(itemData, element))
+		UpdateEsoComputedStatsList(false);
 }
 
 
@@ -5718,9 +5719,10 @@ window.OnEsoRequestFindSetItemReceive = function (data, status, xhr, slotId, mon
 
 window.RequestEsoItemData = function (itemData, element)
 {	
-	if (itemData.itemId == null || itemData.itemId == "") return false;
-	if (itemData.level == null || itemData.level == "") return false;
-	if (itemData.quality == null || itemData.quality == "") return false;
+	if (itemData.itemId == null || itemData.itemId === "") return false;
+	// Use === for level/quality: 0 == "" is true in JS and would skip the fetch.
+	if (itemData.level == null || itemData.level === "") return false;
+	if (itemData.quality == null || itemData.quality === "") return false;
 	
 	var queryParams = {
 			"table" : "minedItem",

@@ -42,6 +42,9 @@ $esoLocalUespCdnProxy = getenv('ESO_LOCAL_UESP_CDN_PROXY') === '1';
 		<script type="text/javascript" src="resources/esobuilddata_itemlink.js"></script>
 		<script src="/_esolog_res/esoItemSearchPopup.js"></script>
 		<?php if (PHP_SAPI === 'cli-server') { ?>
+		<!-- Same-origin /_esolog_api/ avoids browser CORS (live esolog only whitelists uesp.net). Router mode:
+		     ESO_LOCAL_ESOLOG_API=local → sibling exportJson.php + YOUR MySQL (items must exist locally).
+		     ESO_LOCAL_ESOLOG_API=proxy → server fetches https://esolog.uesp.net/… (no local mined tables needed if proxy works). -->
 		<script>window.ESO_ESOLOG_API_BASE = "/_esolog_api";</script>
 		<?php } ?>
 		<?php if (!empty($esoLocalUespCdnProxy)) { ?>
@@ -52,6 +55,20 @@ $esoLocalUespCdnProxy = getenv('ESO_LOCAL_UESP_CDN_PROXY') === '1';
 	</head>
 <body>
 <?php
+if (PHP_SAPI === 'cli-server') {
+	$esoLocalEsologApi = getenv('ESO_LOCAL_ESOLOG_API');
+	if ($esoLocalEsologApi === false || $esoLocalEsologApi === '') {
+		$esoLocalEsologApi = 'local';
+	}
+	if ($esoLocalEsologApi === 'local') {
+		echo '<div style="background:#fff3cd;border-bottom:1px solid #e0c96e;padding:8px 12px;font-size:12px;line-height:1.4;">';
+		echo '<strong>Local item API:</strong> <code>/_esolog_api/</code> runs <code>exportJson.php</code> against <strong>your</strong> esolog MySQL. ';
+		echo 'Equipping an item that has no row there returns no <code>minedItem</code> data, so sets and item-based stats do not update. ';
+		echo 'To use live UESP item data instead, start the dev server with <code>ESO_LOCAL_ESOLOG_API=proxy</code> (see <code>scripts/run-local-server.sh</code>). ';
+		echo 'If proxy returns 502, Cloudflare may be blocking server-side curl — import items or use a VPN/browser export.';
+		echo '</div>';
+	}
+}
 
 require_once("editBuild.class.php");
 

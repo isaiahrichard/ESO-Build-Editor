@@ -330,8 +330,13 @@ class CEsoLogJsonExport
 				$where[] = "quality=".(int)$this->inputQuality;
 			}
 			
-			$query = "SELECT minedItemSummary{$this->GetTableSuffix()}.*, minedItem{$this->GetTableSuffix()}.* FROM $table{$this->GetTableSuffix()} LEFT JOIN minedItemSummary{$this->GetTableSuffix()} ON minedItem{$this->GetTableSuffix()}.itemId = minedItemSummary{$this->GetTableSuffix()}.itemId ";
-			if (count($where) > 0) $query .= " WHERE minedItem{$this->GetTableSuffix()}." . implode(" AND minedItem{$this->GetTableSuffix()}.", $where);
+			$suffix = $this->GetTableSuffix();
+			$mi = "minedItem{$suffix}";
+			$mis = "minedItemSummary{$suffix}";
+			// minedItem.* overwrites duplicate keys from mysqli_fetch_assoc (e.g. setName). When minedItem.setName
+			// is empty but summary has the real set, the editor would see no set — fix after fetch using alias.
+			$query = "SELECT {$mis}.*, {$mi}.*, {$mis}.setName AS uespSummarySetName FROM {$mi} LEFT JOIN {$mis} ON {$mi}.itemId = {$mis}.itemId ";
+			if (count($where) > 0) $query .= " WHERE {$mi}." . implode(" AND {$mi}.", $where);
 			if ($this->inputLimit > 0) $query .= " LIMIT ".$this->inputLimit." ";
 			$query .= ";";
 			
@@ -393,7 +398,15 @@ class CEsoLogJsonExport
 		$query = $this->GetQuery($table);
 		if ($query == "") return false;
 		
-		$result = $this->db->query($query);
+		try {
+			$result = $this->db->query($query);
+		} catch (\Throwable $e) {
+			$msg = $e->getMessage();
+			if (stripos($msg, "doesn't exist") !== false) {
+				$msg .= " (local: run php scripts/import-mined-data.php --only-item-search)";
+			}
+			return $this->ReportError("Error: Failed to load records from '$table': " . $msg, 500);
+		}
 		if (!$result) return $this->ReportError("Error: Failed to load records from '$table'!", 500);
 		
 		$this->outputData[$table] = array();
@@ -401,12 +414,25 @@ class CEsoLogJsonExport
 		
 		while (($row = $result->fetch_assoc()))
 		{
-			if ($table == "minedItem" && $row['link'] == null)
+			if ($table == "minedItem")
 			{
-				$itemId = $row['itemId'];
-				$internalLevel = $row['internalLevel'];
-				$internalSubtype = $row['internalSubtype'];
-				$row['link'] =  "|H0:item:$itemId:$internalSubtype:$internalLevel:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h";
+				if (array_key_exists('uespSummarySetName', $row))
+				{
+					$summarySet = $row['uespSummarySetName'];
+					unset($row['uespSummarySetName']);
+					$detailSet = isset($row['setName']) ? trim((string) $row['setName']) : '';
+					if ($detailSet === '' && $summarySet !== null && trim((string) $summarySet) !== '')
+					{
+						$row['setName'] = $summarySet;
+					}
+				}
+				if ($row['link'] == null)
+				{
+					$itemId = $row['itemId'];
+					$internalLevel = $row['internalLevel'];
+					$internalSubtype = $row['internalSubtype'];
+					$row['link'] =  "|H0:item:$itemId:$internalSubtype:$internalLevel:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h";
+				}
 			}
 			
 			$this->outputData[$table][] = $row;

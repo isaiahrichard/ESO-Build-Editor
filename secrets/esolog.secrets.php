@@ -31,7 +31,7 @@ if (!defined('UESP_ESO_REMOTE_EXPORT_JSON_URL')) {
 
 $uespEsoLogReadDBHost = getenv('UESP_MYSQL_HOST') ?: '127.0.0.1';
 $uespEsoLogReadUser   = getenv('UESP_MYSQL_USER') ?: 'root';
-$uespEsoLogReadPW     = getenv('UESP_MYSQL_PASSWORD') !== false ? getenv('UESP_MYSQL_PASSWORD') : '';
+$uespEsoLogReadPW     = getenv('UESP_MYSQL_PASSWORD') !== false ? getenv('UESP_MYSQL_PASSWORD') : 'esobuildlocal';
 $uespEsoLogDatabase   = getenv('UESP_MYSQL_DATABASE') ?: 'esobuilddata';
 
 $uespEsoLogWriteDBHost = $uespEsoLogReadDBHost;
