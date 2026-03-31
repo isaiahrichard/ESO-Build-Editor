@@ -10962,11 +10962,11 @@ window.EsoBuildCombatSetSlotSkill = function(slotElement, action)
 	if (skillData)
 	{
 		var iconName = skillData.icon.replace(".dds", ".png");
-		slotImage.attr("src", ESO_ICON_URL + iconName);
+		slotImage.attr("src", EsoResolveIconUrl(iconName));
 	}
 	else 
 	{
-		slotImage.attr("src", ESO_ICON_URL + "");
+		slotImage.attr("src", EsoResolveIconUrl(""));
 	}
 	
 	var html = EsoBuildCombatGetSkillActionHtml(skillData, abilityId, action.actionData);

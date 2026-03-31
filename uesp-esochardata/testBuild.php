@@ -1,4 +1,12 @@
-<!DOCTYPE HTML>
+<?php
+// php -S: CDN proxy defaults off — UESP CDNs are behind Cloudflare; server-side curl/file_get_contents
+// gets HTTP 403 (challenge). Browser requests to https://esoicons.uesp.net etc. usually succeed.
+// Set ESO_LOCAL_UESP_CDN_PROXY=1 only if you have a fetch path that passes CF (rare for local dev).
+if (getenv('ESO_LOCAL_UESP_CDN_PROXY') === false && PHP_SAPI === 'cli-server') {
+	putenv('ESO_LOCAL_UESP_CDN_PROXY=0');
+}
+$esoLocalUespCdnProxy = getenv('ESO_LOCAL_UESP_CDN_PROXY') === '1';
+?><!DOCTYPE HTML>
 <html>
 	<head>
 		<title>UESP:ESO Character Build Editor</title>
@@ -33,6 +41,12 @@
 		<!-- Character-data item tooltips (ShowEsoItemLinkPopup, OnEsoItemLinkEnter); not the same as esolog esoitemlink.js -->
 		<script type="text/javascript" src="resources/esobuilddata_itemlink.js"></script>
 		<script src="/_esolog_res/esoItemSearchPopup.js"></script>
+		<?php if (PHP_SAPI === 'cli-server') { ?>
+		<script>window.ESO_ESOLOG_API_BASE = "/_esolog_api";</script>
+		<?php } ?>
+		<?php if (!empty($esoLocalUespCdnProxy)) { ?>
+		<script>window.ESO_ICON_URL = "/_uesp_cdn_proxy/esoicons";</script>
+		<?php } ?>
 		<script src="resources/esoEditBuild.js"></script>
 		
 	</head>

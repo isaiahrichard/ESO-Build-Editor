@@ -189,7 +189,9 @@ UESP.EsoItemSearchPopup = function ()
 	this.ROW_LIMIT = 150;
 	
 	this.iconURL = "//esoicons.uesp.net";
-	this.queryURL = "//esolog.uesp.net/esoItemSearchPopup.php";
+	this.queryURL = (typeof window.ESO_ESOLOG_API_BASE === "string" && window.ESO_ESOLOG_API_BASE !== "")
+		? window.ESO_ESOLOG_API_BASE.replace(/\/*$/, "") + "/esoItemSearchPopup.php"
+		: "//esolog.uesp.net/esoItemSearchPopup.php";
 	this.rootElement = this.create();
 	this.sourceElement = null;
 	this.isItemEnabled = true;
@@ -802,8 +804,32 @@ UESP.EsoItemSearchPopup.prototype.onSearchError = function(xhr, status, errorMsg
 
 UESP.EsoItemSearchPopup.prototype.onSearchResults = function(data, status, xhr)
 {
-	data.sort(function(a, b) { return a.name.localeCompare(b.name); });
-	
+	if (!$.isArray(data)) {
+		var msg = "Item search returned an unexpected response.";
+		if (data != null && typeof data === "object" && data.error) {
+			var parts = [];
+			for (var k in data) {
+				if (!Object.prototype.hasOwnProperty.call(data, k) || k === "error") {
+					continue;
+				}
+				if (typeof data[k] === "string") {
+					parts.push(data[k]);
+				}
+			}
+			msg = parts.length ? parts.join(" ") : msg;
+		}
+		$("#esoispResults").text(msg);
+		$("#esoispResultText").text("");
+		this.searchResults = [];
+		return;
+	}
+
+	data.sort(function(a, b) {
+		var an = (a && a.name) ? a.name : "";
+		var bn = (b && b.name) ? b.name : "";
+		return an.localeCompare(bn);
+	});
+
 	this.displaySearchResults(data);
 }
 

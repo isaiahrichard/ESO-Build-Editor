@@ -7,6 +7,15 @@ window.lastEsoBookSearchElement = null;
 window.g_EsoBuildLastInputValues = {};
 window.g_EsoCurrentTooltipSlot = "";
 
+if (typeof window.EsoEsoLogApiScriptUrl !== "function") {
+	window.EsoEsoLogApiScriptUrl = function (scriptName) {
+		var b = window.ESO_ESOLOG_API_BASE;
+		if (typeof b === "string" && b !== "")
+			return b.replace(/\/*$/, "") + "/" + scriptName;
+		return "//esolog.uesp.net/" + scriptName;
+	};
+}
+
 	// Default stats needed for tooltip updates
 g_EsoBuildLastInputValues.HealingDone = 0;
 g_EsoBuildLastInputValues.SpellResist = 0;
@@ -2184,7 +2193,7 @@ window.OnEsoBookClick = function(e)
 	
 	g_EsoLastBookId = bookId;
 	
-	$.ajax("//esolog.uesp.net/exportJson.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoBookDataRequest(data, status, xhr); }).

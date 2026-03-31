@@ -4439,7 +4439,32 @@ class EsoBuildDataEditor
 		);
 		
 		$output = strtr($this->htmlTemplate, $replacePairs);
-		return $output;
+		return $this->MaybeRewriteUespCdnUrlsForLocalProxy($output);
+	}
+
+	/**
+	 * When ESO_LOCAL_UESP_CDN_PROXY=1, point UESP CDN URLs at /_uesp_cdn_proxy/... so php -S serves
+	 * bytes same-origin (historically helped with CORP / Referer). UESP CDNs are often behind
+	 * Cloudflare; server-side fetches then get HTTP 403 — leave proxy off (default) for local dev.
+	 */
+	public function MaybeRewriteUespCdnUrlsForLocalProxy($html)
+	{
+		if (getenv('ESO_LOCAL_UESP_CDN_PROXY') !== '1') {
+			return $html;
+		}
+		$map = array(
+			'https://esobuilds-static.uesp.net' => '/_uesp_cdn_proxy/esobuilds-static',
+			'http://esobuilds-static.uesp.net' => '/_uesp_cdn_proxy/esobuilds-static',
+			'//esobuilds-static.uesp.net' => '/_uesp_cdn_proxy/esobuilds-static',
+			'https://esoicons.uesp.net' => '/_uesp_cdn_proxy/esoicons',
+			'http://esoicons.uesp.net' => '/_uesp_cdn_proxy/esoicons',
+			'//esoicons.uesp.net' => '/_uesp_cdn_proxy/esoicons',
+			'https://esolog-static.uesp.net' => '/_uesp_cdn_proxy/esolog-static',
+			'http://esolog-static.uesp.net' => '/_uesp_cdn_proxy/esolog-static',
+			'//esolog-static.uesp.net' => '/_uesp_cdn_proxy/esolog-static',
+		);
+		$html = str_replace(array_keys($map), array_values($map), $html);
+		return preg_replace('#(/_uesp_cdn_proxy/(?:esoicons|esobuilds-static|esolog-static))/+#', '$1/', $html);
 	}
 	
 

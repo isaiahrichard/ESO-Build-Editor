@@ -27,7 +27,26 @@ window.TestCache = 789;
 window.ESO_TESTBUILD_SHOWALLRAWINPUTS = false;
 window.ESO_BUILD_CREATERULECACHE = false;	// Doesn't speed up things much
 
-window.ESO_ICON_URL = "//esoicons.uesp.net";
+if (typeof window.ESO_ICON_URL !== "string" || window.ESO_ICON_URL === "")
+	window.ESO_ICON_URL = "//esoicons.uesp.net";
+
+/** Join ESO_ICON_URL with a path that may start with "/" or "//" (avoids /_uesp_cdn_proxy/esoicons//esoui/...). */
+window.EsoResolveIconUrl = function (path) {
+	var base = (typeof ESO_ICON_URL === "string" && ESO_ICON_URL) ? ESO_ICON_URL : "//esoicons.uesp.net";
+	base = base.replace(/\/*$/, "/");
+	var p = (path == null || path === "") ? "blank.png" : String(path).replace(/^\/*/, "").replace(/\.dds$/i, ".png");
+	return base + p;
+};
+
+/** Set window.ESO_ESOLOG_API_BASE (e.g. "/_esolog_api") for same-origin esolog JSON when CORS blocks 127.0.0.1. */
+if (typeof window.EsoEsoLogApiScriptUrl !== "function") {
+	window.EsoEsoLogApiScriptUrl = function (scriptName) {
+		var b = window.ESO_ESOLOG_API_BASE;
+		if (typeof b === "string" && b !== "")
+			return b.replace(/\/*$/, "") + "/" + scriptName;
+		return "//esolog.uesp.net/" + scriptName;
+	};
+}
 
 window.ESO_MAX_ATTRIBUTES = 64;
 window.ESO_MAX_LEVEL = 50;
@@ -5216,7 +5235,7 @@ window.OnEsoSelectItem = function (itemData, element)
 	}
 	
 	var iconName = itemData.icon.replace(".dds", ".png");
-	var iconUrl = ESO_ICON_URL + iconName;
+	var iconUrl = EsoResolveIconUrl(iconName);
 	var niceName = itemData.name.charAt(0).toUpperCase() + itemData.name.slice(1);
 	
 	if (iconName == "" || iconName == "/") iconUrl = "";
@@ -5472,7 +5491,7 @@ window.RequestEsoChangeArmorTypeData = function (itemData, armorType, slotId)
 	
 	if (g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
 
-	$.ajax("//esolog.uesp.net/esoItemSearchPopup.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("esoItemSearchPopup.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoRequestChangeArmorTypeReceive(data, status, xhr, slotId, itemData, armorType); }).
@@ -5497,7 +5516,7 @@ window.RequestEsoFindSetItemData = function (slotId, monsterSet, equipType, armo
 	
 	if (g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
 
-	$.ajax("//esolog.uesp.net/esoItemSearchPopup.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("esoItemSearchPopup.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoRequestFindSetItemReceive(data, status, xhr, slotId, monsterSet, equipType, armorType, weaponType, level, quality, trait, msgElement, onNoItemsFoundCallback); }).
@@ -5543,7 +5562,7 @@ window.RequestEsoChangeTraitData = function (itemData, newTrait, slotId, msgElem
 	
 	if (g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
 
-	$.ajax("//esolog.uesp.net/esoItemSearchPopup.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("esoItemSearchPopup.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoRequestChangeTraitReceive(data, status, xhr, slotId, itemData, newTrait, msgElement); }).
@@ -5673,7 +5692,7 @@ window.OnEsoRequestFindSetItemReceive = function (data, status, xhr, slotId, mon
 	}
 	
 	var iconName = itemData.icon.replace(".dds", ".png");
-	var iconUrl = ESO_ICON_URL + iconName;
+	var iconUrl = EsoResolveIconUrl(iconName);
 	var niceName = itemData.name.charAt(0).toUpperCase() + itemData.name.slice(1);
 	
 	if (iconName == "" || iconName == "/") iconUrl = "";
@@ -5721,7 +5740,7 @@ window.RequestEsoItemData = function (itemData, element)
 		// queryParams.quality = null;
 	}
 	
-	$.ajax("//esolog.uesp.net/exportJson.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoItemDataReceive(data, status, xhr, element, itemData); }).
@@ -5782,7 +5801,7 @@ window.GetEsoSetMaxData = function (itemData)
 	
 	if (g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
 	
-	$.ajax("//esolog.uesp.net/exportJson.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoSetMaxDataReceive(data, status, xhr); }).
@@ -6771,7 +6790,7 @@ window.RequestEsoEnchantData = function (itemData, element)
 	
 	if (g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
 	
-	$.ajax("//esolog.uesp.net/exportJson.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoEnchantDataReceive(data, status, xhr, element, itemData); }).
@@ -8962,8 +8981,8 @@ window.CreateEsoBuildBuffHtml = function (buffName, buffData)
 	
 	buffData.name = buffName;
 	
-	if (icon == null) icon = "/unknown.png";
-	icon = ESO_ICON_URL + icon;
+	if (icon == null || icon === "") icon = "/unknown.png";
+	icon = EsoResolveIconUrl(icon);
 	
 	if (buffData.visible === false) extraClass = "esotbBuffDisabled";
 	if (buffData.enabled) checked = "checked";
@@ -10554,7 +10573,7 @@ window.EquipSetItem = function (setName, slotId, level, quality)
 	
 	if (g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
 	
-	$.ajax("//esolog.uesp.net/getSetItemData.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("getSetItemData.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoSetItemDataReceive(data, status, xhr, slotId); }).
@@ -10576,7 +10595,7 @@ window.OnEsoSetItemDataReceive = function (data, status, xhr, slotId)
 	var labelElement = $(element).find(".esotbItemLabel");
 		
 	var iconName = itemData.icon.replace(".dds", ".png");
-	var iconUrl = ESO_ICON_URL + iconName;
+	var iconUrl = EsoResolveIconUrl(iconName);
 	var niceName = itemData.name.charAt(0).toUpperCase() + itemData.name.slice(1);
 	
 	if (iconName == "" || iconName == "/") iconUrl = "";
@@ -11663,7 +11682,7 @@ window.UpdateEsoBuildSlottedDestructionSkills = function ()
 		
 		if (g_SkillsData[newSkillId] != null)
 		{
-			icon.attr("src", "//esoicons.uesp.net" + g_SkillsData[newSkillId]['icon'].replace("\.dds", ".png"));
+			icon.attr("src", EsoResolveIconUrl(g_SkillsData[newSkillId]['icon']));
 		}
 		
 		icon.attr("skillId", newSkillId);
@@ -11766,7 +11785,7 @@ window.RequestEsoTransmuteTraitData = function (itemData, newTrait, element)
 	
 	if (g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
 	
-	$.ajax("//esolog.uesp.net/exportJson.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoTransmuteTraitDataReceive(data, status, xhr, element, itemData); }).
@@ -12618,7 +12637,7 @@ window.RequestEsoAllSetData = function ()
 	
 	g_EsoLoadedAllSetData = false;
 	
-	$.ajax("//esolog.uesp.net/exportJson.php", {
+	$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), {
 			data: queryParams,
 		}).
 		done(function(data, status, xhr) { OnEsoAllSetDataReceive(data, status, xhr); }).

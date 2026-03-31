@@ -1,6 +1,6 @@
 <?php
 
-require_once("/home/uesp/secrets/esolog.secrets");
+require_once(is_file(__DIR__ . "/../secrets/esolog.secrets.php") ? __DIR__ . "/../secrets/esolog.secrets.php" : "/home/uesp/secrets/esolog.secrets");
 require_once("esoCommon.php");
 
 
@@ -120,7 +120,10 @@ class CEsoLogGetSetItemData
 		header("Expires: 0");
 		header("Pragma: no-cache");
 		header("Cache-Control: no-cache, no-store, must-revalidate");
-		header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN'] . "");
+		$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+		if ($origin !== '') {
+			header("Access-Control-Allow-Origin: " . $origin);
+		}
 		header("content-type: application/json");
 	}
 	

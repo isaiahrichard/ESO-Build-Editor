@@ -1,7 +1,7 @@
 <?php 
 
 
-require_once("/home/uesp/secrets/esolog.secrets");
+require_once(is_file(__DIR__ . "/../secrets/esolog.secrets.php") ? __DIR__ . "/../secrets/esolog.secrets.php" : "/home/uesp/secrets/esolog.secrets");
 require_once("esoCommon.php");
 
 
@@ -65,9 +65,9 @@ class CEsoItemSearchPopup
 		header("Cache-Control: no-cache, no-store, must-revalidate");
 		header("Pragma: no-cache");
 		header("content-type: application/json");
-		$origin = $_SERVER['HTTP_ORIGIN'];
+		$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 		
-		if (substr($origin, -8) == "uesp.net")
+		if ($origin !== '' && substr($origin, -8) == "uesp.net")
 		{
 			header("Access-Control-Allow-Origin: $origin");
 		}
@@ -240,41 +240,48 @@ class CEsoItemSearchPopup
 	
 	public function LoadItems()
 	{
-		$query = $this->CreateQuery();
-		//error_log($query);
-		$result = $this->db->query($query);
-		if (!$result) return $this->ReportError("Error: Database query error loading items! " . $this->db->error . "\n" . $query);
-		
-		while (($row = $result->fetch_assoc()))
-		{
-			if ($this->inputItemQuality >= 0) 
-			{
-				$splitQuality = explode("-", $row['quality']);
-				$minQuality = $splitQuality[0];
-				$maxQuality = $splitQuality[1];
-				if ($maxQuality == null) $maxQuality = $minQuality;
-				
-				if ($this->inputItemQuality < $minQuality || $this->inputItemQuality > $maxQuality) {
-					//error_log("Skipping Item: {$this->inputItemQuality} : $minQuality : $maxQuality");
-					continue;
-				}
+		try {
+			$query = $this->CreateQuery();
+			//error_log($query);
+			$result = $this->db->query($query);
+			if (!$result) {
+				return $this->ReportError("Error: Database query error loading items! " . $this->db->error . "\n" . $query);
 			}
-			
-			$this->resultItems[] = $row;
+
+			while (($row = $result->fetch_assoc())) {
+				if ($this->inputItemQuality >= 0) {
+					$splitQuality = explode("-", $row['quality']);
+					$minQuality = $splitQuality[0];
+					$maxQuality = $splitQuality[1];
+					if ($maxQuality == null) {
+						$maxQuality = $minQuality;
+					}
+
+					if ($this->inputItemQuality < $minQuality || $this->inputItemQuality > $maxQuality) {
+						continue;
+					}
+				}
+
+				$this->resultItems[] = $row;
+			}
+
+			$result = $this->db->query("SELECT FOUND_ROWS() as rowCount;");
+
+			if ($result) {
+				$row = $result->fetch_assoc();
+				$row['type'] = -1;
+				$row['name'] = "zzzzzzzzz_RowCount";
+				$this->resultItems[] = $row;
+			}
+
+			$this->TransformItems();
+			return true;
+		} catch (\Throwable $e) {
+			$hint = (stripos($e->getMessage(), "doesn't exist") !== false)
+				? " Import item tables: php scripts/import-mined-data.php --only-item-search (see script header)."
+				: "";
+			return $this->ReportError("Error: Database query error loading items! " . $e->getMessage() . $hint);
 		}
-		
-		$result = $this->db->query("SELECT FOUND_ROWS() as rowCount;");
-		
-		if ($result) 
-		{
-			$row = $result->fetch_assoc();
-			$row['type'] = -1;
-			$row['name'] = "zzzzzzzzz_RowCount";
-			$this->resultItems[] = $row; 
-		}
-		
-		$this->TransformItems();
-		return true;
 	}
 	
 	

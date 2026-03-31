@@ -1,6 +1,6 @@
 <?php
 
-require_once("/home/uesp/secrets/esolog.secrets");
+require_once(is_file(__DIR__ . "/../secrets/esolog.secrets.php") ? __DIR__ . "/../secrets/esolog.secrets.php" : "/home/uesp/secrets/esolog.secrets");
 require_once("esoCommon.php");
 
 
