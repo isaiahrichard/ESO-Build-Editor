@@ -16,4 +16,5 @@ if ! php -r 'exit(extension_loaded("openssl") || function_exists("curl_init") ? 
 	echo "  mysql ... < uesp-esochardata/sql/mined_tables_schema.sql && php scripts/import-mined-data.php"
 fi
 echo "Stop with Ctrl+C"
-exec php -S 127.0.0.1:8080
+# Router serves /_esolog_res/* from ../uesp-esolog/resources (same-origin; avoids UESP CDN 403 on Referer 127.0.0.1)
+exec php -S 127.0.0.1:8080 local-server-router.php

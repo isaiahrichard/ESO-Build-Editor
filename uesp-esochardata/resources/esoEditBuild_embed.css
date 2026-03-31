@@ -114,6 +114,14 @@
 	overflow: hidden;
 	float: none !important;
 	min-width: 745px;
+	position: relative;
+	z-index: 2;
+}
+
+/* Keep tab row above the floated computed-stats column so clicks are not stolen by overlap. */
+#esotbStatTabList {
+	position: relative;
+	z-index: 3;
 }
 
 #esotbStatList {
@@ -121,6 +129,8 @@
 	width: 300px;
 	padding: 7px;
 	display: inline-block;
+	position: relative;
+	z-index: 1;
 }
 
 .esotbStatTitle {

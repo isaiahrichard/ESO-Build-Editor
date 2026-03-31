@@ -3483,6 +3483,14 @@ class EsoBuildDataEditor
 	{
 		$isNew = ($this->buildId <= 0 || $this->buildId == null);
 		
+		$this->viewSkills->charStats = (
+			is_array($this->buildDataViewer->characterData)
+			&& array_key_exists('stats', $this->buildDataViewer->characterData)
+			&& is_array($this->buildDataViewer->characterData['stats'])
+		)
+			? $this->buildDataViewer->characterData['stats']
+			: array();
+		
 		$this->viewSkills->displayClass = $this->getCharField('class', 'Dragonknight');
 		$this->viewSkills->displayRace = $this->getCharField('race', 'Argonian');
 		

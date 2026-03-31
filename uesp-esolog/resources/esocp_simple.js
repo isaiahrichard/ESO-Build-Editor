@@ -14,6 +14,18 @@ window.EsoCpLog = function ()
 }
 
 
+/**
+ * Wrap document.getElementById for use with jQuery. CP v2 discipline/cluster ids can
+ * contain apostrophes (e.g. survivor's_spite) which are invalid in Sizzle/CSS #id selectors.
+ */
+window.EsoCpJQueryById = function (id)
+{
+	if (id == null || id === "") return $();
+	var el = document.getElementById(id);
+	return el ? $(el) : $();
+};
+
+
 window.g_EsoCpUpdateSkillElements = null;
 window.g_EsoCpUpdateDiscElements = null;
 window.g_EsoCpUpdatAttributeElements = null;
@@ -161,7 +173,7 @@ window.OnEsoCpDisciplineClick = function (e)
 	$(this).addClass("esovcpDiscHighlight");
 	
 	$("#esovcpSkills").find(".esovcpDiscSkills").hide();
-	$("#skills_" + id).show();
+	EsoCpJQueryById("skills_" + id).show();
 	
 	esovcpHideTooltip();
 	UpdateEsoCPLink();
@@ -496,7 +508,7 @@ window.UpdateEsoCPSkillDesc = function(skillId, points)
 
 window.UpdateEsoCPDiscSkillDesc = function(discId)
 {
-	var discElement = $("#skills_" + discId);
+	var discElement = EsoCpJQueryById("skills_" + discId);
 	
 	discElement.find(".esovcpSkill, .esovcp2Skill").each(function(i, element){
 		var skillId = $(this).attr("skillid");
@@ -511,10 +523,10 @@ window.UpdateEsoCPDiscPoints = function(discId)
 {
 	//var skillInputs = $("#skills_" + discId + " .esovcpPointInput");
 	var totalPoints = 0;
-	var attributeIndex = $("#" + discId).parent().attr("attributeindex");
-	var discIndex = $("#" + discId).parent().attr("disciplineindex");
+	var attributeIndex = EsoCpJQueryById(discId).parent().attr("attributeindex");
+	var discIndex = EsoCpJQueryById(discId).parent().attr("disciplineindex");
 	//var skillInputs = $("#esovcpContainer").find("#skills_" + discId).find(".esovcpPointInput").not(".esovcpPointInputCluster");
-	var skillInputs = $("#esovcpContainer").find("#skills_" + discId).children(".esovcp2Skill").not(".esovcpNotPurchaseable").find(".esovcpPointInput").not(".esovcpPointInputCluster");
+	var skillInputs = EsoCpJQueryById("skills_" + discId).children(".esovcp2Skill").not(".esovcpNotPurchaseable").find(".esovcpPointInput").not(".esovcpPointInputCluster");
 	
 	skillInputs.each(function() {
 		var points = parseInt($(this).val()) || 0;
@@ -524,11 +536,13 @@ window.UpdateEsoCPDiscPoints = function(discId)
 		totalPoints += points;
 	});
 	
-	$("#esovcpContainer").find(".esovcpSkillCluster[clusterid='" + discId + "']").find(".esovcpPointInput").val(totalPoints);
+	$("#esovcpContainer").find(".esovcpSkillCluster").filter(function () {
+		return $(this).attr("clusterid") === discId;
+	}).find(".esovcpPointInput").val(totalPoints);
 	
-	$("#esovcpContainer").find("#skills_" + discId + " .esovcpDiscTitlePoints").text(totalPoints);
-	$("#esovcpContainer").find("#" + discId + " .esovcpDiscPoints").text(totalPoints);
-	$("#esovcpContainer").find("#" + discId + "_base .esovcpDiscPoints").text(totalPoints);
+	EsoCpJQueryById("skills_" + discId).find(".esovcpDiscTitlePoints").text(totalPoints);
+	EsoCpJQueryById(discId).find(".esovcpDiscPoints").text(totalPoints);
+	EsoCpJQueryById(discId + "_base").find(".esovcpDiscPoints").text(totalPoints);
 	
 	UpdateEsoCPUnlockLevels(discId);
 	UpdateEsoCPDiscAttrPoints(attributeIndex, discIndex);
@@ -650,8 +664,8 @@ window.UpdateEsoCPUnlockLevels = function(discId)
 {
 	if (window.g_EsoCpIsV2) return UpdateEsoCP2UnlockLevels(discId);
 		
-	var points = parseInt($("#skills_" + discId + " .esovcpDiscTitlePoints").text()) || 0;
-	var passives = $("#skills_" + discId + " .esovcpSkillLevel");
+	var points = parseInt(EsoCpJQueryById("skills_" + discId).find(".esovcpDiscTitlePoints").text()) || 0;
+	var passives = EsoCpJQueryById("skills_" + discId).find(".esovcpSkillLevel");
 	
 	passives.each(function() {
 		var parent = $(this).parent(); 
@@ -686,7 +700,7 @@ window.UpdateEsoCP2UnlockLevels = function(discId)
 	
 	if (skills == null)
 	{
-		g_EsoCpDiscSkills[discId] = $("#esovcpContainer").find("#skills_" + discId + " .esovcpSkill, #skills_" + discId + " .esovcp2Skill");
+		g_EsoCpDiscSkills[discId] = EsoCpJQueryById("skills_" + discId).find(".esovcpSkill, .esovcp2Skill");
 		skills = g_EsoCpDiscSkills[discId];
 	}
 	
@@ -790,7 +804,7 @@ window.SelectEsoCPSkillElement = function (element)
 		parent.show();
 		
 		$("#esovcpDisciplines, #esovcp2Disciplines").find(".esovcpDiscHighlight").removeClass("esovcpDiscHighlight");
-		$("#" + discId).addClass("esovcpDiscHighlight");
+		EsoCpJQueryById(discId).addClass("esovcpDiscHighlight");
 	}
 	
 	var skillOffset = element.offset().top;
@@ -880,7 +894,7 @@ window.OnEsoCPPurchaseAllDisc = function(e)
 	if (!parent.hasClass("esovcp2SkillsCluster")) clusters.each(function() {
 		var $this = $(this);
 		var clusterId = $this.attr("id");
-		var cluster = $("#skills_" + clusterId);
+		var cluster = EsoCpJQueryById("skills_" + clusterId);
 		
 		cluster.find(".esovcpPointInput").each(function (){
 			var $this = $(this);
@@ -928,7 +942,7 @@ window.OnEsoCPResetDisc = function (e)
 		if (!parent.hasClass("esovcp2SkillsCluster")) clusters.each(function() {
 			var $this = $(this);
 			var clusterId = $this.attr("id");
-			var cluster = $("#skills_" + clusterId);
+			var cluster = EsoCpJQueryById("skills_" + clusterId);
 			
 			cluster.find(".esovcpPointInput").val("0");
 			cluster.find(".esovcpEquipCheck").prop("checked", false);
@@ -1014,7 +1028,7 @@ window.OnEsoCP2DisciplineClick = function()
 	
 	$("#esovcpSkills").find(".esovcpDiscSkills:visible").hide();
 	//$(".esovcpDiscSkills[disciplineindex='" + disciplineIndex + "']").show();
-	$("#" + skillId).show();
+	EsoCpJQueryById(skillId).show();
 	
 	esovcpHideTooltip();
 	$(this).addClass("esovcpDiscHighlight");
@@ -1156,7 +1170,7 @@ window.esovcpUpdateTooltip = function()
 	if (showCluster)
 	{
 		var clusterId = skillData['clusterName'].toLowerCase().replace(" ", "_").replace("'", "_");
-		var clusterSkills = $("#skills_" + clusterId).find(".esovcp2Skill");
+		var clusterSkills = EsoCpJQueryById("skills_" + clusterId).find(".esovcp2Skill");
 		var totalPoints = 0;
 		
 		clusterSkills.each(function() {
@@ -1372,10 +1386,10 @@ window.OnEsoCP2SkillClusterClick = function()
 	if (clusterId == null || clusterId == "") return;
 	
 	$("#esovcpSkills").find(".esovcpDiscSkills:visible").hide();
-	$("#skills_" + clusterId).show();
+	EsoCpJQueryById("skills_" + clusterId).show();
 	
 	$("#esovcpDisciplines, #esovcp2Disciplines").find(".esovcpDiscHighlight").removeClass("esovcpDiscHighlight");
-	$("#" + clusterId).addClass("esovcpDiscHighlight");
+	EsoCpJQueryById(clusterId).addClass("esovcpDiscHighlight");
 }
 
 

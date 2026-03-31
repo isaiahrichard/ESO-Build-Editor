@@ -1507,11 +1507,12 @@ window.OnItemRowLeave = function(e)
 
 window.DoesEsoItemLinkHaveEvent = function()
 {
-	if (ShowEsoItemLinkPopup != null) return true; 
-	
+	// esobuilddata_itemlink.js defines this; use typeof — a bare identifier throws ReferenceError if the script was not loaded.
+	if (typeof window.ShowEsoItemLinkPopup === 'function') return true;
+
 	//var events = $._data($(".eso_item_link").get(0), 'events');
 	//if (events['mouseover'] != null || events['mouseout'] != null) return true;
-	
+
 	return false;
 }
 
@@ -2461,7 +2462,9 @@ window.AddEsoCharDataAsyncHandlers = function(parent)
 	$parent.find(".ecdCollectibleCategory").first().trigger("click");
 	$parent.find(".ecdQuestZoneTitle").first().trigger("click");
 		 	
-	if (!DoesEsoItemLinkHaveEvent() || !$parent.is($(document))) $parent.find('.eso_item_link').hover(OnEsoItemLinkEnter, OnEsoItemLinkLeave);
+	if (typeof window.OnEsoItemLinkEnter === 'function' && typeof window.OnEsoItemLinkLeave === 'function' &&
+		(!DoesEsoItemLinkHaveEvent() || !$parent.is($(document))))
+		$parent.find('.eso_item_link').hover(OnEsoItemLinkEnter, OnEsoItemLinkLeave);
 }
 
 
@@ -3512,11 +3515,12 @@ window.EsoBuildLoadEmbed = function(buildId, elementId)
 window.OnEsoBuildDataEmbedRequest = function(elementId, data, status, xhr)
 {
 	$("#" + elementId).html(data);
-	
-	$('.eso_item_link').hover(OnEsoItemLinkEnter, OnEsoItemLinkLeave);
-	
+
+	if (typeof window.OnEsoItemLinkEnter === 'function' && typeof window.OnEsoItemLinkLeave === 'function')
+		$('.eso_item_link').hover(OnEsoItemLinkEnter, OnEsoItemLinkLeave);
+
 	onEsoBuildDataDocReady();
-	esovcpOnDocReady();
+	if (typeof window.esovcpOnDocReady === 'function') esovcpOnDocReady();
 }
 
 

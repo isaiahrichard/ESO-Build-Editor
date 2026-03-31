@@ -10,6 +10,8 @@ class CEsoViewSkills
 {
 	const ESOVS_ENABLE_PROFILE = false;
 	CONST ESOVS_USE_MEMCACHE = false;		// Not completely implemented or tested, does not drastically increase speed at the moment
+	/** Below this count, local minedSkills/skillTree data is treated as missing or incomplete and export JSON is used instead. */
+	const ESOVS_MIN_EXPECTED_SKILLS = 200;
 	
 	const DEFAULT_SKILL_HEALTH = 20000;
 	const DEFAULT_SKILL_MAGICKA = 20000;
@@ -284,7 +286,8 @@ class CEsoViewSkills
 		$cost = "";
 		$id = $skill['id'];
 		
-		if (($this->TABLE_SUFFIX != "" && intval($this->TABLE_SUFFIX) < 34) && ($this->TABLE_SUFFIX == "" && GetEsoUpdateVersion() < 34))
+		$suffix = $this->GetTableSuffix();
+		if (($suffix != "" && intval($suffix) < 34) || ($suffix == "" && GetEsoUpdateVersion() < 34))
 		{
 			$cost = "" . $skill['cost'] . " " . GetEsoCombatMechanicText($skill['mechanic']);
 			return $cost;
@@ -501,7 +504,9 @@ class CEsoViewSkills
 			$abilityId = intval($row['abilityId']);
 			$tooltipIndex = intval($row['idx']);
 			
-			if ($this->skillTooltips[$abilityId] == null) $this->skillTooltips[$abilityId] = array();
+			if (!array_key_exists($abilityId, $this->skillTooltips)) {
+				$this->skillTooltips[$abilityId] = array();
+			}
 			$this->skillTooltips[$abilityId][$tooltipIndex] = $row;
 		}
 		
@@ -864,7 +869,7 @@ class CEsoViewSkills
 	{
 		if ($this->initialData == null) return 0;
 		
-		$usedPoints = $this->initialData['UsedPoints'];
+		$usedPoints = array_key_exists('UsedPoints', $this->initialData) ? $this->initialData['UsedPoints'] : 0;
 		if ($usedPoints == null || $usedPoints < 0) $usedPoints = 0;
 		
 		return $usedPoints;
@@ -957,8 +962,10 @@ class CEsoViewSkills
 		{
 			$subclassButton = "<div class='esovsSubclassButton'><img loading='lazy' title='[Select a Subclass Skill]' skilllineindex='$index' origskilllineid=\"$skillLine\" skilllineid=\"$skillLine\" class='esovsSubclassImage' src='//esolog-static.uesp.net/resources/pointsplus_up.png'></div>";
 			
-			$charSubclass = $this->charStats["Subclass" . $index];
-			$charSubclassLine = $this->charStats["SubclassSkillLine" . $index];
+			$subKey = "Subclass" . $index;
+			$subLineKey = "SubclassSkillLine" . $index;
+			$charSubclass = (is_array($this->charStats) && array_key_exists($subKey, $this->charStats)) ? $this->charStats[$subKey] : null;
+			$charSubclassLine = (is_array($this->charStats) && array_key_exists($subLineKey, $this->charStats)) ? $this->charStats[$subLineKey] : null;
 			if ($charSubclass) $charSubclass = $charSubclass['value'];
 			if ($charSubclassLine) $charSubclassLine = $charSubclassLine['value'];
 			if (!$charSubclass) $charSubclass = "";
@@ -1046,7 +1053,9 @@ class CEsoViewSkills
 	
 	public function FindLastAbility($abilityData)
 	{
-		if ($abilityData['type'] != "Passive" && array_key_exists(4, $abilityData)) return $abilityData[4];
+		if (array_key_exists('type', $abilityData) && $abilityData['type'] != "Passive" && array_key_exists(4, $abilityData)) {
+			return $abilityData[4];
+		}
 		
 		for ($i = 12; $i >= -1; --$i)
 		{
@@ -1133,7 +1142,9 @@ class CEsoViewSkills
 	{
 		$craftId = intval($craftedSkill['id']);
 		$abilityId = intval($craftedSkill['abilityId']);
-		$activeData = $this->activeData[$abilityId];
+		$activeData = (is_array($this->activeData) && array_key_exists($abilityId, $this->activeData))
+			? $this->activeData[$abilityId]
+			: null;
 		
 		if ($activeData)
 		{
@@ -1413,6 +1424,7 @@ class CEsoViewSkills
 	
 	public function GetCraftedSkillContentHtml($type, $typeLabel, $skillLine, $skillLineData, $skillType)
 	{
+		$output = "";
 		$craftedSkills = $this->FindCraftedSkillsForLine($skillLine);
 		$count = count($craftedSkills);
 		//$output = "<div>Crafted Skills for $type/$typeLabel/$skillLine $count</div>";
@@ -1441,7 +1453,12 @@ class CEsoViewSkills
 		
 		foreach ($skillLineData as $abilityName => $abilityData)
 		{
-			if ($abilityData['type'] != $type) continue;
+			if (!is_array($abilityData)) {
+				continue;
+			}
+			if (!array_key_exists('type', $abilityData) || $abilityData['type'] != $type) {
+				continue;
+			}
 			if (array_key_exists('skillIndex', $abilityData) && $abilityData['skillIndex'] < 0) continue;
 			
 			$baseAbility = $this->FindFirstAbility($abilityData);
@@ -1621,7 +1638,9 @@ class CEsoViewSkills
 		if ($id == $this->highlightSkillId && $this->displayType == "summary") $extraClass .= " esovsSearchHighlight";
 		
 		$isFree = "0";
-		if ($ESO_FREE_SKILLS[$id]) $isFree = "1";
+		if (is_array($ESO_FREE_SKILLS) && array_key_exists($id, $ESO_FREE_SKILLS) && $ESO_FREE_SKILLS[$id]) {
+			$isFree = "1";
+		}
 		
 		$output .= "<div class='esovsAbilityBlock $extraClass' morph='$morph' skillid='$id' origskillid='$baseId' rank='$rank' origrank='$origRank' maxrank='$maxRank' isfree='$isFree' abilitytype='$type' skilltype=\"$skillType\" skilline=\"$skillLine\" classtype=\"$classType\" racetype=\"$raceType\">" ;
 		
@@ -1768,7 +1787,7 @@ class CEsoViewSkills
 			
 			$skillIds[$abilityId] = $skill;
 			
-			$tooltips = $this->skillTooltips[$abilityId];
+			$tooltips = array_key_exists($abilityId, $this->skillTooltips) ? $this->skillTooltips[$abilityId] : null;
 			
 			if ($tooltips)
 				$skillIds[$abilityId]['tooltips'] = $tooltips;
@@ -1811,7 +1830,7 @@ class CEsoViewSkills
 			$setName = strtolower($skill['setName']);
 			$skillIds[$setName] = $skill;
 			
-			$tooltips = $this->skillTooltips[$abilityId];
+			$tooltips = array_key_exists($abilityId, $this->skillTooltips) ? $this->skillTooltips[$abilityId] : null;
 			
 			if ($tooltips)
 				$skillIds[$setName]['tooltips'] = $tooltips;
@@ -2283,11 +2302,28 @@ class CEsoViewSkills
 		$skillsOk = false;
 
 		try {
-			$this->LoadSkills();
-			$this->hasSkillTooltips = $this->LoadSkillTooltips();
-			$skillsOk = true;
+			$loaded = $this->LoadSkills();
+			$skillCount = is_array($this->skills) ? count($this->skills) : 0;
+			if ($loaded && $skillCount >= self::ESOVS_MIN_EXPECTED_SKILLS) {
+				$this->hasSkillTooltips = $this->LoadSkillTooltips();
+				$skillsOk = true;
+			} else {
+				if ($loaded && $skillCount < self::ESOVS_MIN_EXPECTED_SKILLS) {
+					error_log("CEsoViewSkills::LoadData: local skill count ($skillCount) below " . self::ESOVS_MIN_EXPECTED_SKILLS . "; using mined export JSON if available.");
+				}
+				$this->skills = array();
+				$this->setSkills = array();
+				$this->skillTree = array();
+				$this->skillSearchIds = array();
+				$this->skillTooltips = array();
+			}
 		} catch (Throwable $e) {
 			$localSkillError = $e;
+			$this->skills = array();
+			$this->setSkills = array();
+			$this->skillTree = array();
+			$this->skillSearchIds = array();
+			$this->skillTooltips = array();
 		}
 
 		if (!$skillsOk && !$this->LoadSkillsAndTooltipsFromRemoteExport()) {
@@ -2386,7 +2422,7 @@ class CEsoViewSkills
 				$abilityId = intval($row['abilityId']);
 				$tooltipIndex = intval($row['idx']);
 
-				if ($this->skillTooltips[$abilityId] == null) {
+				if (!array_key_exists($abilityId, $this->skillTooltips)) {
 					$this->skillTooltips[$abilityId] = array();
 				}
 				$this->skillTooltips[$abilityId][$tooltipIndex] = $row;

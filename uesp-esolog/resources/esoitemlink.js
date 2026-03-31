@@ -625,6 +625,30 @@ function AddEsoItemLinkCopyButton(id)
 
 
 $( document ).ready(function() {
+	/* itemLink.php page only: template sets allItemData in an inline script (esoitemlink_template.txt).
+	   Other apps (e.g. build editor) load this file for shared helpers; they have no #esoil_levelcontrol. */
+	if ($('#esoil_levelcontrol').length === 0) {
+		return;
+	}
+
+	if (typeof allItemData === 'undefined') {
+		console.error(
+			'esoitemlink.js: allItemData is not defined. The item link viewer must output ' +
+			'`var allItemData = ...` from itemLink.php (see esoitemlink_template.txt) before this runs. ' +
+			'If you use a custom page, include that assignment or load this script only on the item link route.'
+		);
+		return;
+	}
+
+	if (!Array.isArray(allItemData)) {
+		console.error('esoitemlink.js: allItemData must be an array; got', typeof allItemData);
+		return;
+	}
+
+	if (allItemData.length === 0) {
+		console.warn('esoitemlink.js: allItemData is empty; level/quality controls and copy buttons will not be initialized.');
+		return;
+	}
 
 	$('#esoil_levelcontrol').on('input', function(e) { 
 		$('#esoil_leveltext').val(GetEsoItemFullLevelText(this.value));

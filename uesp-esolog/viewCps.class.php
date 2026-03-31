@@ -295,12 +295,12 @@ class CEsoViewCP
 			$index = $row['disciplineIndex'];
 			$parentSkillId = intval($row['parentSkillId']);
 			$clusterName = "";
-			if ($parentSkillId > 0 && $this->cpClusters[$parentSkillId] != null) {
+			if ($parentSkillId > 0 && isset($this->cpClusters[$parentSkillId])) {
 				$clusterName = $this->cpClusters[$parentSkillId]['name'];
 			}
 			$row['clusterName'] = $clusterName;
 
-			$posAdjust = $this->ESPVCP_POSITION_ADJUST[$skillId];
+			$posAdjust = isset($this->ESPVCP_POSITION_ADJUST[$skillId]) ? $this->ESPVCP_POSITION_ADJUST[$skillId] : null;
 
 			if ($posAdjust != null) {
 				$row['x'] = floatVal($row['x']) + $posAdjust[0];
@@ -322,6 +322,9 @@ class CEsoViewCP
 		if (!empty($data['cp2SkillDescriptions']) && is_array($data['cp2SkillDescriptions'])) {
 			foreach ($data['cp2SkillDescriptions'] as $row) {
 				$abilityId = $row['abilityId'];
+				if (!isset($this->cpAbilityIds[$abilityId])) {
+					continue;
+				}
 				$index = $this->cpAbilityIds[$abilityId];
 				$points = $row['points'];
 
@@ -349,18 +352,22 @@ class CEsoViewCP
 			$parentId = $link['parentSkillId'];
 			$skillId  = $link['skillId'];
 			
-			$abilityId1 = $this->cpSkillsIdMap[$parentId];
-			$abilityId2 = $this->cpSkillsIdMap[$skillId];
+			$abilityId1 = $this->cpSkillsIdMap[$parentId] ?? null;
+			$abilityId2 = $this->cpSkillsIdMap[$skillId] ?? null;
 			if ($abilityId1 == null || $abilityId2 == null) { error_log("CreateCp2LinksData: Null ability ID!"); continue; }
 			
-			$skill1 = $this->cpSkills[$abilityId1];
-			$skill2 = $this->cpSkills[$abilityId2];
+			$skill1 = $this->cpSkills[$abilityId1] ?? null;
+			$skill2 = $this->cpSkills[$abilityId2] ?? null;
 			if ($skill1 == null || $skill2 == null) { error_log("CreateCp2LinksData: Null skill data!"); continue; }
 			
-			if ($this->cpLinksData[$abilityId1] == null) $this->cpLinksData[$abilityId1] = array();
+			if (!isset($this->cpLinksData[$abilityId1]) || $this->cpLinksData[$abilityId1] === null) {
+				$this->cpLinksData[$abilityId1] = array();
+			}
 			$this->cpLinksData[$abilityId1][] = $abilityId2;
 			
-			if ($this->cpReverseLinksData[$abilityId2] == null) $this->cpReverseLinksData[$abilityId2] = array();
+			if (!isset($this->cpReverseLinksData[$abilityId2]) || $this->cpReverseLinksData[$abilityId2] === null) {
+				$this->cpReverseLinksData[$abilityId2] = array();
+			}
 			$this->cpReverseLinksData[$abilityId2][] = $abilityId1;
 		}
 		
@@ -369,15 +376,22 @@ class CEsoViewCP
 	
 	private function UpdateCP2SkillPurchaseableChildren($abilityId)
 	{
-		if ($this->skillVisited[$abilityId]) return;
+		if (!empty($this->skillVisited[$abilityId])) {
+			return;
+		}
 		
 		$this->skillVisited[$abilityId] = true;
 		$this->skillPurchaseTemp[$abilityId] = 1;
 		
-		$links = $this->cpLinksData[$abilityId];
-		if ($links == null) return;
+		$links = $this->cpLinksData[$abilityId] ?? null;
+		if ($links == null) {
+			return;
+		}
 		
-		$skillData = $this->cpSkills[$abilityId];
+		$skillData = $this->cpSkills[$abilityId] ?? null;
+		if ($skillData === null) {
+			return;
+		}
 		$skillValue = $this->GetInitialSkillValue($skillData);
 		$jumpPointDelta = $skillData['jumpPointDelta'];
 		
@@ -445,8 +459,8 @@ class CEsoViewCP
 			++$loopCount;
 			
 			$jumpPointDelta = $skillData['jumpPointDelta'];
-			$childSkills = $this->cpLinksData[$abilityId];
-			$parentSkills = $this->cpReverseLinksData[$abilityId];
+			$childSkills = $this->cpLinksData[$abilityId] ?? null;
+			$parentSkills = $this->cpReverseLinksData[$abilityId] ?? null;
 			
 			if ($parentSkills == null)
 			{
@@ -461,7 +475,7 @@ class CEsoViewCP
 			
 			foreach ($parentSkills as $parentSkill)
 			{
-				if (!$cpSkillVisited[$parentSkill]) 
+				if (empty($cpSkillVisited[$parentSkill])) 
 				{
 					$hasAllParentVisited = false;
 					continue;
@@ -469,7 +483,7 @@ class CEsoViewCP
 				
 				$hasParentVisited = true;
 				
-				if ($this->cpSkillIsPurchaseable[$parentSkill]) 
+				if (!empty($this->cpSkillIsPurchaseable[$parentSkill])) 
 				{
 					$parentSkillData = $this->cpSkills[$parentSkill];
 					$parentValue = $this->GetInitialSkillValue($parentSkillData);
@@ -578,11 +592,6 @@ class CEsoViewCP
 		$this->cpSkills = array();
 		$this->cpSkillsIdMap = array();
 		
-		$basePosAdjustX = 0;
-		$basePosAdjustY = 0;
-		
-		$posAdjust = $this->ESPVCP_POSITION_ADJUST[$skillId];
-		
 		while (($row = $result->fetch_assoc()))
 		{
 			$abilityId = $row['abilityId'];
@@ -590,10 +599,12 @@ class CEsoViewCP
 			$index = $row['disciplineIndex'];
 			$parentSkillId = intval($row['parentSkillId']);
 			$clusterName = "";
-			if ($parentSkillId > 0 && $this->cpClusters[$parentSkillId] != null) $clusterName = $this->cpClusters[$parentSkillId]['name'];
+			if ($parentSkillId > 0 && isset($this->cpClusters[$parentSkillId])) {
+				$clusterName = $this->cpClusters[$parentSkillId]['name'];
+			}
 			$row['clusterName'] = $clusterName;
 			
-			$posAdjust = $this->ESPVCP_POSITION_ADJUST[$skillId];
+			$posAdjust = isset($this->ESPVCP_POSITION_ADJUST[$skillId]) ? $this->ESPVCP_POSITION_ADJUST[$skillId] : null;
 			
 			if ($posAdjust != null)
 			{
@@ -663,6 +674,9 @@ class CEsoViewCP
 		while (($row = $result->fetch_assoc()))
 		{
 			$abilityId = $row['abilityId'];
+			if (!isset($this->cpAbilityIds[$abilityId])) {
+				continue;
+			}
 			$index = $this->cpAbilityIds[$abilityId];
 			$points = $row['points'];
 				
@@ -955,12 +969,12 @@ class CEsoViewCP
 			if (!$isCluster && $skill['parentSkillId'] > 0) continue;
 			
 			$id = $skill['abilityId'];
-			$links = $this->cpLinksData[$id];
+			$links = $this->cpLinksData[$id] ?? null;
 			if ($links == null) continue;
 			
 			foreach ($links as $linkId)
 			{
-				$linkSkill = $this->cpSkills[$linkId];
+				$linkSkill = $this->cpSkills[$linkId] ?? null;
 				if ($linkSkill == null) continue;
 				
 				if ($isCluster && $linkSkill['parentSkillId'] <= 0) continue;
@@ -970,7 +984,7 @@ class CEsoViewCP
 				if ($isCluster)
 				{
 					$parentSkillId = $skill['parentSkillId'];
-					$posAdjust = $this->ESPVCP_PARENT_POSITION_ADJUST[$parentSkillId];
+					$posAdjust = isset($this->ESPVCP_PARENT_POSITION_ADJUST[$parentSkillId]) ? $this->ESPVCP_PARENT_POSITION_ADJUST[$parentSkillId] : null;
 					
 					if ($posAdjust != null)
 					{
@@ -1366,7 +1380,7 @@ class CEsoViewCP
 	public function GetCp2SkillChildLinks($skill)
 	{
 		$id = $skill['abilityId'];
-		$childSkills = $this->cpLinksData[$id];
+		$childSkills = $this->cpLinksData[$id] ?? null;
 		if ($childSkills == null) return "";
 			
 		$output = "<div class='esovcpSkillChildren'>Links To: ";
@@ -1374,7 +1388,7 @@ class CEsoViewCP
 		
 		foreach ($childSkills as $childSkillId)
 		{
-			$childSkill = $this->cpSkills[$childSkillId];
+			$childSkill = $this->cpSkills[$childSkillId] ?? null;
 			if ($childSkill == null) continue;
 			
 			if ($childCount > 0) $output .= ", ";
@@ -1415,7 +1429,10 @@ class CEsoViewCP
 		if ($initialValue >= $unlockLevel) $isUnlocked = 1;
 		
 		//$rawDesc = $skill['descriptions'][$initialValue]['description'];
-		$desc = $this->cpSkillDesc[$id][$initialValue];
+		$desc = null;
+		if (isset($this->cpSkillDesc[$id][$initialValue])) {
+			$desc = $this->cpSkillDesc[$id][$initialValue];
+		}
 		if ($desc == null || $desc == "") $desc = $this->FormatDescriptionHtml($skill['minDescription']);
 		
 		if (!$this->showEdit) 
@@ -1429,7 +1446,7 @@ class CEsoViewCP
 			//if ($skill['isClusterRoot'] == 0) return "";
 			if ($this->showFlatV2) return "";
 			
-			$clusterRoot = $this->cpClusters[$skill['skillId']];
+			$clusterRoot = $this->cpClusters[$skill['skillId']] ?? null;
 			
 			if ($clusterRoot != null && !$isCluster)
 			{
@@ -1441,7 +1458,7 @@ class CEsoViewCP
 			}
 		}
 		
-		$isPurchaseable = $this->cpSkillIsPurchaseable[$id];
+		$isPurchaseable = !empty($this->cpSkillIsPurchaseable[$id]);
 		if (!$isPurchaseable) $extraClass .= " esovcpNotPurchaseable";
 		
 		$offsetX = 0;
@@ -1450,7 +1467,7 @@ class CEsoViewCP
 		if ($isCluster)
 		{
 			$parentSkillId = $skill['parentSkillId'];
-			$posAdjust = $this->ESPVCP_PARENT_POSITION_ADJUST[$parentSkillId];
+			$posAdjust = isset($this->ESPVCP_PARENT_POSITION_ADJUST[$parentSkillId]) ? $this->ESPVCP_PARENT_POSITION_ADJUST[$parentSkillId] : null;
 			
 			if ($posAdjust != null)
 			{
@@ -1485,7 +1502,7 @@ class CEsoViewCP
 			$id .= "_cluster";
 			$extraInputClass = " esovcpPointInputCluster";
 			$extraClass .= " esovcpSkillCluster";
-			$clusterData = $this->cpClusters[$skill['skillId']];
+			$clusterData = $this->cpClusters[$skill['skillId']] ?? null;
 			
 			if ($clusterData != null)
 			{

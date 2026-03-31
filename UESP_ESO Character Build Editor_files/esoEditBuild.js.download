@@ -15050,6 +15050,13 @@ window.esotbOnDocReady = function ()
 	
 	console.log("Passive Data", g_EsoSkillPassiveData);
 	
+	/* Tab switching is pure DOM; bind first (delegated) so it works even if later init throws or early-returns. */
+	$(document).off("click.esotbMainStatTab", "#esotbStatTabList .esotbStatTab").on(
+		"click.esotbMainStatTab",
+		"#esotbStatTabList .esotbStatTab",
+		OnEsoClickBuildStatTab
+	);
+	
 	if (window.g_EsoBuildRules == null) return;
 	if (window.g_EsoInitialItemData == null) return;
 	
@@ -15128,8 +15135,6 @@ window.esotbOnDocReady = function ()
 	$("#esotbItemDetailsCloseButton").click(CloseEsoItemDetailsPopup);
 	$("#esotbFormulaCloseButton").click(CloseEsoFormulaPopup);
 	$("#esotbClickWall").click(OnEsoClickBuildWall);
-	
-	$("#esotbStatTabList").find(".esotbStatTab").click(OnEsoClickBuildStatTab);
 	
 	$(document).on("EsoItemSearchPopupOnClose", OnEsoItemSearchPopupClose);
 	
