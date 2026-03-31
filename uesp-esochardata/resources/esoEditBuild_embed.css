@@ -655,7 +655,7 @@
     box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
     white-space: nowrap;
     line-height: 1em;
-    display: none;
+    display: block;
 }
 
 .esotbItemEnchantButton:hover:after {

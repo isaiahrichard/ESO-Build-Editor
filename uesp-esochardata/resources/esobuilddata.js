@@ -1514,18 +1514,6 @@ window.OnItemRowLeave = function(e)
 }
 
 
-window.DoesEsoItemLinkHaveEvent = function()
-{
-	// esobuilddata_itemlink.js defines this; use typeof — a bare identifier throws ReferenceError if the script was not loaded.
-	if (typeof window.ShowEsoItemLinkPopup === 'function') return true;
-
-	//var events = $._data($(".eso_item_link").get(0), 'events');
-	//if (events['mouseover'] != null || events['mouseout'] != null) return true;
-
-	return false;
-}
-
-
 window.OnSlideAchievementComplete = function()
 {
 	SlideAchievementIntoView($(this).parent());
@@ -2471,8 +2459,7 @@ window.AddEsoCharDataAsyncHandlers = function(parent)
 	$parent.find(".ecdCollectibleCategory").first().trigger("click");
 	$parent.find(".ecdQuestZoneTitle").first().trigger("click");
 		 	
-	if (typeof window.OnEsoItemLinkEnter === 'function' && typeof window.OnEsoItemLinkLeave === 'function' &&
-		(!DoesEsoItemLinkHaveEvent() || !$parent.is($(document))))
+	if (typeof window.OnEsoItemLinkEnter === 'function' && typeof window.OnEsoItemLinkLeave === 'function')
 		$parent.find('.eso_item_link').hover(OnEsoItemLinkEnter, OnEsoItemLinkLeave);
 }
 
