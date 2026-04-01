@@ -2,7 +2,7 @@
 	<button id="esotbSaveButton" {saveButtonDisabled}>Save Build</button>
 	<button id="esotbCreateCopyButton" {createCopyButtonDisabled}>Create Copy</button>
 	<button id="esotbDeleteButton" {deleteButtonDisabled}>Delete</button>
-	<button type="button" id="esotbLoadLocalBuildButton" style="display:none;">Load Build…</button>
+	<button type="button" id="esotbLoadLocalBuildButton" style="display:none;">Load Build...</button>
 	<div id="esotbSaveResults"></div>
 </div>
 {editorErrorBanner}

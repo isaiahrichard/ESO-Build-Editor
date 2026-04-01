@@ -1,12 +1,8 @@
 <?php
-// Local JSON saves (localBuildStorage.php); enables Save/Copy/Delete/Load without wiki session.
+// Local MySQL saves (localBuildStorage.php → editor_local_builds); Save/Copy/Delete/Load without wiki session.
 if (PHP_SAPI === 'cli-server') {
 	putenv('ESO_LOCAL_BUILD_STORAGE=1');
-	if (isset($_GET['localBuildId']) && (int) $_GET['localBuildId'] > 0) {
-		$__lid = (int) $_GET['localBuildId'];
-		$_GET['id'] = $__lid;
-		$_REQUEST['id'] = $__lid;
-	}
+	// Do not copy localBuildId → id: saved builds live in editor_local_builds, not `characters`.
 }
 // php -S: CDN proxy defaults off — UESP CDNs are behind Cloudflare; server-side curl/file_get_contents
 // gets HTTP 403 (challenge). Browser requests to https://esoicons.uesp.net etc. usually succeed.
@@ -92,10 +88,9 @@ print($buildDataEditor->GetOutputHtml());
 
 if (PHP_SAPI === 'cli-server' && !empty($_GET['localBuildId'])) {
 	$__lid = (int) $_GET['localBuildId'];
-	$__path = __DIR__ . '/local-builds/' . $__lid . '.json';
-	if ($__lid > 0 && is_file($__path)) {
-		$__raw = file_get_contents($__path);
-		$__data = json_decode($__raw !== false ? $__raw : 'null', true);
+	if ($__lid > 0) {
+		require_once __DIR__ . '/localBuildMysql.inc.php';
+		$__data = local_editor_builds_load_savedata($__lid);
 		if (is_array($__data)) {
 			print('<script type="text/javascript">window.g_EsoLocalSavedata = ');
 			print(json_encode($__data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE));

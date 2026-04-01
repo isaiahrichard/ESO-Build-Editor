@@ -1,7 +1,7 @@
 <?php
 /**
- * Local-only JSON storage for testBuild.php (php -S). Writes under local-builds/.
- * Restricted to loopback clients.
+ * Local-only storage for testBuild.php (php -S): saves JSON blob in MySQL `editor_local_builds`.
+ * Restricted to loopback clients. Table is created if missing (see also seed.sql).
  */
 declare(strict_types=1);
 
@@ -14,41 +14,31 @@ if ($remote !== '127.0.0.1' && $remote !== '::1') {
 	exit;
 }
 
-$baseDir = __DIR__ . '/local-builds';
-if (!is_dir($baseDir)) {
-	if (!mkdir($baseDir, 0755, true)) {
-		http_response_code(500);
-		echo json_encode(['success' => false, 'errors' => ['Could not create local-builds directory']]);
-		exit;
-	}
+require_once __DIR__ . '/localBuildMysql.inc.php';
+
+$db = local_editor_builds_connect();
+if ($db === null) {
+	http_response_code(500);
+	echo json_encode(['success' => false, 'errors' => ['Could not connect to MySQL (check secrets/esobuilddata.secrets.php and UESP_MYSQL_*)']]);
+	exit;
+}
+if (!local_editor_builds_ensure_table($db)) {
+	http_response_code(500);
+	$db->close();
+	echo json_encode(['success' => false, 'errors' => ['Could not create or verify editor_local_builds table']]);
+	exit;
 }
 
-$manifestPath = $baseDir . '/manifest.json';
-
-function local_builds_read_manifest(string $manifestPath): array
+function local_builds_next_id(mysqli $db): int
 {
-	if (!is_file($manifestPath)) {
-		return ['builds' => []];
+	$res = $db->query('SELECT MAX(`id`) AS m FROM `editor_local_builds`');
+	if ($res === false) {
+		return 1;
 	}
-	$raw = file_get_contents($manifestPath);
-	$j = json_decode($raw === false ? 'null' : $raw, true);
-	return is_array($j) ? $j : ['builds' => []];
-}
+	$row = $res->fetch_assoc();
+	$res->free();
+	$max = isset($row['m']) ? (int) $row['m'] : 0;
 
-function local_builds_write_manifest(string $manifestPath, array $data): void
-{
-	file_put_contents($manifestPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-}
-
-function local_builds_next_id(array $manifest): int
-{
-	$max = 0;
-	foreach ($manifest['builds'] as $b) {
-		$id = (int) ($b['id'] ?? 0);
-		if ($id > $max) {
-			$max = $id;
-		}
-	}
 	return $max + 1;
 }
 
@@ -56,26 +46,49 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 if ($method === 'GET' && ($action === 'list' || $action === '')) {
-	$m = local_builds_read_manifest($manifestPath);
-	echo json_encode(['success' => true, 'builds' => $m['builds']]);
+	$builds = [];
+	$res = $db->query('SELECT `id`, `name`, `modified` FROM `editor_local_builds` ORDER BY `modified` DESC');
+	if ($res !== false) {
+		while ($row = $res->fetch_assoc()) {
+			$builds[] = [
+				'id' => (int) $row['id'],
+				'name' => (string) $row['name'],
+				'modified' => date('c', strtotime((string) $row['modified'])),
+			];
+		}
+		$res->free();
+	}
+	$db->close();
+	echo json_encode(['success' => true, 'builds' => $builds]);
 	exit;
 }
 
 if ($method === 'GET' && $action === 'load') {
 	$id = (int) ($_GET['id'] ?? 0);
 	if ($id <= 0) {
+		$db->close();
 		echo json_encode(['success' => false, 'errors' => ['Invalid id']]);
 		exit;
 	}
-	$path = $baseDir . '/' . $id . '.json';
-	if (!is_file($path)) {
+	$stmt = $db->prepare('SELECT `savedata` FROM `editor_local_builds` WHERE `id` = ? LIMIT 1');
+	if ($stmt === false) {
+		$db->close();
+		echo json_encode(['success' => false, 'errors' => ['Query failed']]);
+		exit;
+	}
+	$stmt->bind_param('i', $id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$row = $result ? $result->fetch_assoc() : null;
+	$stmt->close();
+	$db->close();
+	if ($row === null || $row['savedata'] === null || $row['savedata'] === '') {
 		echo json_encode(['success' => false, 'errors' => ['Build not found']]);
 		exit;
 	}
-	$raw = file_get_contents($path);
-	$data = json_decode($raw === false ? 'null' : $raw, true);
+	$data = json_decode((string) $row['savedata'], true);
 	if (!is_array($data)) {
-		echo json_encode(['success' => false, 'errors' => ['Invalid JSON file']]);
+		echo json_encode(['success' => false, 'errors' => ['Invalid JSON in database']]);
 		exit;
 	}
 	echo json_encode(['success' => true, 'savedata' => $data]);
@@ -89,15 +102,14 @@ if ($method === 'POST' && $action === 'save') {
 
 	$parsed = json_decode($savedata, true);
 	if (!is_array($parsed)) {
+		$db->close();
 		echo json_encode(['success' => false, 'errors' => ['Invalid savedata JSON']]);
 		exit;
 	}
 
-	$m = local_builds_read_manifest($manifestPath);
 	$isNew = false;
-
 	if ($id <= 0 || $copy) {
-		$id = local_builds_next_id($m);
+		$id = local_builds_next_id($db);
 		$isNew = true;
 	}
 
@@ -113,27 +125,31 @@ if ($method === 'POST' && $action === 'save') {
 	}
 	$parsed['Build']['id'] = $id;
 
-	$path = $baseDir . '/' . $id . '.json';
-	if (file_put_contents($path, json_encode($parsed, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) === false) {
-		echo json_encode(['success' => false, 'errors' => ['Failed to write file']]);
+	$json = json_encode($parsed, JSON_UNESCAPED_UNICODE);
+	if ($json === false) {
+		$db->close();
+		echo json_encode(['success' => false, 'errors' => ['Failed to encode JSON']]);
 		exit;
 	}
 
-	$now = date('c');
-	$found = false;
-	foreach ($m['builds'] as &$b) {
-		if ((int) ($b['id'] ?? 0) === $id) {
-			$b['name'] = $name;
-			$b['modified'] = $now;
-			$found = true;
-			break;
-		}
+	$modifiedSql = date('Y-m-d H:i:s');
+	$stmt = $db->prepare(
+		'INSERT INTO `editor_local_builds` (`id`, `name`, `modified`, `savedata`) VALUES (?, ?, ?, ?)
+		 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `modified` = VALUES(`modified`), `savedata` = VALUES(`savedata`)'
+	);
+	if ($stmt === false) {
+		$db->close();
+		echo json_encode(['success' => false, 'errors' => ['Prepare failed']]);
+		exit;
 	}
-	unset($b);
-	if (!$found) {
-		$m['builds'][] = ['id' => $id, 'name' => $name, 'modified' => $now];
+	$stmt->bind_param('isss', $id, $name, $modifiedSql, $json);
+	$ok = $stmt->execute();
+	$stmt->close();
+	$db->close();
+	if (!$ok) {
+		echo json_encode(['success' => false, 'errors' => ['Failed to save build']]);
+		exit;
 	}
-	local_builds_write_manifest($manifestPath, $m);
 
 	echo json_encode(['success' => true, 'id' => $id, 'isnew' => $isNew]);
 	exit;
@@ -142,21 +158,24 @@ if ($method === 'POST' && $action === 'save') {
 if ($method === 'POST' && $action === 'delete') {
 	$id = (int) ($_POST['id'] ?? 0);
 	if ($id <= 0) {
+		$db->close();
 		echo json_encode(['success' => false, 'errors' => ['Invalid id']]);
 		exit;
 	}
-	$path = $baseDir . '/' . $id . '.json';
-	if (is_file($path)) {
-		@unlink($path);
+	$stmt = $db->prepare('DELETE FROM `editor_local_builds` WHERE `id` = ?');
+	if ($stmt === false) {
+		$db->close();
+		echo json_encode(['success' => false, 'errors' => ['Prepare failed']]);
+		exit;
 	}
-	$m = local_builds_read_manifest($manifestPath);
-	$m['builds'] = array_values(array_filter($m['builds'], static function ($b) use ($id) {
-		return (int) ($b['id'] ?? 0) !== $id;
-	}));
-	local_builds_write_manifest($manifestPath, $m);
+	$stmt->bind_param('i', $id);
+	$stmt->execute();
+	$stmt->close();
+	$db->close();
 	echo json_encode(['success' => true]);
 	exit;
 }
 
+$db->close();
 http_response_code(400);
 echo json_encode(['success' => false, 'errors' => ['Unknown action']]);

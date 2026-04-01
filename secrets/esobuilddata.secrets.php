@@ -4,7 +4,7 @@
  */
 $uespEsoBuildDataReadDBHost = getenv('UESP_MYSQL_HOST') ?: '127.0.0.1';
 $uespEsoBuildDataReadUser   = getenv('UESP_MYSQL_USER') ?: 'root';
-$uespEsoBuildDataReadPW     = getenv('UESP_MYSQL_PASSWORD') !== false ? getenv('UESP_MYSQL_PASSWORD') : '';
+$uespEsoBuildDataReadPW     = getenv('UESP_MYSQL_PASSWORD') !== false ? getenv('UESP_MYSQL_PASSWORD') : 'esobuildlocal';
 $uespEsoBuildDataDatabase   = getenv('UESP_MYSQL_DATABASE') ?: 'esobuilddata';
 
 $uespEsoBuildDataWriteDBHost = $uespEsoBuildDataReadDBHost;

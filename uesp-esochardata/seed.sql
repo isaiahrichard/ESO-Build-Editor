@@ -225,6 +225,17 @@ CREATE TABLE IF NOT EXISTS `cache` (
   PRIMARY KEY (`characterId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- testBuild.php / localBuildStorage.php: full JSON blob per build (local dev)
+
+CREATE TABLE IF NOT EXISTS `editor_local_builds` (
+  `id` INT UNSIGNED NOT NULL,
+  `name` VARCHAR(512) NOT NULL DEFAULT '',
+  `modified` DATETIME NOT NULL,
+  `savedata` LONGTEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_editor_local_modified` (`modified`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ------------------------------------------------------------
 -- Versions
 -- ------------------------------------------------------------

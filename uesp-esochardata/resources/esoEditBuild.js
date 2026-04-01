@@ -9692,7 +9692,9 @@ window.CreateEsoBuildSaveData = function ()
 	CreateEsoBuildSkillToggleSaveData(saveData, inputValues);
 	CreateEsoBuildSetToggleSaveData(saveData, inputValues);
 	CreateEsoBuildCpToggleSaveData(saveData, inputValues);
-	CreateEsoBuildCombatSaveData(saveData, inputValues);
+	// esoBuildCombat.js (not loaded by testBuild.php) defines this; skip if absent.
+	if (typeof window.CreateEsoBuildCombatSaveData === "function")
+		window.CreateEsoBuildCombatSaveData(saveData, inputValues);
 	
 	CreateEsoBuildOffBarSaveData(saveData, inputValues);
 	
@@ -10536,7 +10538,17 @@ window.OnEsoBuildDelete = function (e)
 window.OnEsoBuildCreateCopy = function (e)
 {
 	var buildName = $("#esotbBuildName").val().trim();
-	if (!buildName.endsWith(" (Copy)")) $("#esotbBuildName").val(buildName + " (Copy)");
+	if (!buildName && window.g_EsoBuildData)
+	{
+		if (g_EsoBuildData.buildName != null && String(g_EsoBuildData.buildName).trim() !== "")
+			buildName = String(g_EsoBuildData.buildName).trim();
+		else if (g_EsoBuildData.name != null && String(g_EsoBuildData.name).trim() !== "")
+			buildName = String(g_EsoBuildData.name).trim();
+	}
+	buildName = buildName.replace(/\s*\([Cc]opy\)\s*$/i, "").trim();
+	if (buildName === "")
+		buildName = "Build";
+	$("#esotbBuildName").val(buildName + " (copy)");
 	
 	SetEsoBuildSaveResults("Saving new build...");
 
@@ -10568,7 +10580,19 @@ window.EsoApplyLocalSaveDataStatToDom = function (statId, value)
 	}
 	else if (node.tagName === "DIV")
 	{
-		$el.text(String(value));
+		// Computed stat rows: statid is on .esotbStatRow; only update the value cell, not the whole row (would erase .esotbStatName).
+		if ($el.hasClass("esotbStatRow"))
+		{
+			var $statVal = $el.children(".esotbStatValue").first();
+			if ($statVal.length > 0)
+				$statVal.text(String(value));
+			else
+				$el.text(String(value));
+		}
+		else
+		{
+			$el.text(String(value));
+		}
 	}
 };
 
@@ -10773,6 +10797,7 @@ window.ApplyEsoLocalBuildSaveData = function (saveData)
 	UpdateEsoInitialToggleSetData();
 	UpdateEsoInitialToggleCpData();
 	UpdateEsoInitialToggleSkillData();
+	UpdateEsoComputedStatsList(true);
 	EsoApplyLocalSavedataEquipSlotsAsync(saveData.EquipSlots || {}, function () {
 		UpdateEsoBuildItemLinkSetCounts();
 		UpdateEsoComputedStatsList(true);
@@ -15408,8 +15433,6 @@ window.esotbOnDocReady = function ()
 {
 	clearInterval(g_EsoCharDataTimeUpdateId);
 	
-	console.log("Passive Data", g_EsoSkillPassiveData);
-	
 	/* Tab switching is pure DOM; bind first (delegated) so it works even if later init throws or early-returns. */
 	$(document).off("click.esotbMainStatTab", "#esotbStatTabList .esotbStatTab").on(
 		"click.esotbMainStatTab",
@@ -15582,7 +15605,6 @@ window.esotbOnDocReady = function ()
 	{
 		var sd = window.g_EsoLocalSavedata;
 		delete window.g_EsoLocalSavedata;
-		UpdateEsoComputedStatsList(true);
 		ApplyEsoLocalBuildSaveData(sd);
 	}
 	else

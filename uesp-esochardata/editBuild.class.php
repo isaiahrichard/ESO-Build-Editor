@@ -56,6 +56,9 @@ class EsoBuildDataEditor
 	
 	public $buildId = null;
 	
+	/** php -S + localBuildStorage: ?localBuildId=N uses editor_local_builds, not `characters` */
+	public $localSavedBuildId = 0;
+	
 	public $loadSetNames = false;
 	public $setNames = array();
 	
@@ -2543,6 +2546,16 @@ class EsoBuildDataEditor
 		if (array_key_exists('id', $this->inputParams)) $this->buildId = (int) ($this->inputParams['id']);
 		if (array_key_exists('buildid', $this->inputParams)) $this->buildId = (int) ($this->inputParams['buildid']);
 		
+		if (getenv('ESO_LOCAL_BUILD_STORAGE') === '1' && array_key_exists('localBuildId', $this->inputParams))
+		{
+			$lid = (int) ($this->inputParams['localBuildId']);
+			if ($lid > 0)
+			{
+				$this->localSavedBuildId = $lid;
+				$this->buildId = null;
+			}
+		}
+		
 		if (array_key_exists('loadsets', $this->inputParams)) 
 		{
 			$value = $this->inputParams['loadsets'];
@@ -3926,6 +3939,10 @@ class EsoBuildDataEditor
 		{
 			$buildData['id'] = (int) $this->buildId;
 		}
+		if ($this->localSavedBuildId > 0)
+		{
+			$buildData['id'] = (int) $this->localSavedBuildId;
+		}
 		
 		$buildData['wikiUserName'] = $this->GetWikiUserName();
 		$buildData['canEdit'] = $this->buildDataViewer->canWikiUserEdit();
@@ -3963,7 +3980,10 @@ class EsoBuildDataEditor
 		if ($this->READONLY) return "disabled";
 		
 		if (getenv('ESO_LOCAL_BUILD_STORAGE') === '1')
-			return ($this->buildId <= 0) ? "disabled" : "";
+		{
+			$effectiveId = ($this->buildId !== null && $this->buildId > 0) ? (int) $this->buildId : (int) $this->localSavedBuildId;
+			return ($effectiveId <= 0) ? "disabled" : "";
+		}
 		
 		if ($this->buildId < 0)
 			$canCreate = false;
@@ -3980,7 +4000,10 @@ class EsoBuildDataEditor
 		if ($this->READONLY) return "disabled";
 		
 		if (getenv('ESO_LOCAL_BUILD_STORAGE') === '1')
-			return ($this->buildId <= 0) ? "disabled" : "";
+		{
+			$effectiveId = ($this->buildId !== null && $this->buildId > 0) ? (int) $this->buildId : (int) $this->localSavedBuildId;
+			return ($effectiveId <= 0) ? "disabled" : "";
+		}
 		
 		if ($this->buildId < 0)
 			$canDelete = false;
