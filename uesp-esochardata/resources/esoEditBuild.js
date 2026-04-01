@@ -8811,7 +8811,7 @@ window.OnEsoBuildSkillBarSwap = function (e, skillBarIndex, weaponBarIndex)
 	}
 	
 	CopyEsoSkillsToItemTab();
-	CopyEsoSkillsToCombatTab();
+	if (window.CopyEsoSkillsToCombatTab) CopyEsoSkillsToCombatTab();
 	UpdateEsoComputedStatsList("async");
 }
 
