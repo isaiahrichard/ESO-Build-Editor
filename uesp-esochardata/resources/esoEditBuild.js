@@ -5750,6 +5750,32 @@ window.RequestEsoItemData = function (itemData, element)
 }
 
 
+/* Updates slot icon/label after async minedItem fetch (set-gear path already did this in OnEsoSetItemDataReceive). */
+window.UpdateEsoItemSlotDomFromMinedItem = function (slotId, itemData)
+{
+	if (slotId == null || slotId === "" || itemData == null) return;
+	var element = $("#esotbItem" + slotId);
+	if (element.length === 0) return;
+	var iconElement = element.find(".esotbItemIcon");
+	var labelElement = element.find(".esotbItemLabel");
+	var iconName = (itemData.icon || "").replace(".dds", ".png");
+	var iconUrl = EsoResolveIconUrl(iconName);
+	if (iconName === "" || iconName === "/") iconUrl = "";
+	var rawName = itemData.name || "";
+	var niceName = rawName.length ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "";
+	iconElement.attr("src", iconUrl);
+	labelElement.text(niceName);
+	iconElement.attr("itemid", itemData.itemId);
+	iconElement.attr("intlevel", itemData.internalLevel);
+	iconElement.attr("inttype", itemData.internalSubtype);
+	iconElement.attr("setcount", "0");
+	iconElement.attr("perfectcount", "0");
+	iconElement.attr("enchantfactor", "0");
+	iconElement.attr("extraarmor", "0");
+	iconElement.attr("trait", "0");
+};
+
+
 window.OnEsoItemDataReceive = function (data, status, xhr, element, origItemData)
 {
 	var slotId = $(element).attr("slotId");
@@ -5775,12 +5801,16 @@ window.OnEsoItemDataReceive = function (data, status, xhr, element, origItemData
 	g_EsoBuildItemData[slotId].transmuteTrait = 0;
 	g_EsoBuildItemData[slotId].origTrait = g_EsoBuildItemData[slotId].trait; 
 	g_EsoBuildItemData[slotId].origTraitDesc = g_EsoBuildItemData[slotId].traitDesc;
+	if (slotId === "Food" && g_EsoBuildItemData[slotId].enabled !== false)
+		g_EsoBuildItemData[slotId].enabled = true;
+	if (slotId === "Food" && (g_EsoBuildItemData[slotId].link == null || g_EsoBuildItemData[slotId].link === "") && origItemData && origItemData.itemLink)
+		g_EsoBuildItemData[slotId].link = origItemData.itemLink;
 	
 	UpdateEsoItemTraitList(slotId, g_EsoBuildItemData[slotId].trait);
-	
-	UpdateEsoComputedStatsList(false);
-	
+	UpdateEsoItemSlotDomFromMinedItem(slotId, g_EsoBuildItemData[slotId]);
+	UpdateWeaponEquipSlots(g_EsoBuildItemData[slotId], slotId);
 	GetEsoSetMaxData(g_EsoBuildItemData[slotId]);
+	UpdateEsoComputedStatsList(false);
 }
 
 
@@ -10157,6 +10187,7 @@ window.CreateEsoBuildItemSaveData = function (saveData, inputValues)
 		saveData.Stats["LastFoodEatenLink"] = "";
 		saveData.Stats["LastFoodEatenName"] = "";
 		saveData.Stats["LastFoodEatenType"] = "";
+		saveData.Stats["LastFoodEatenQuality"] = "";
 	}
 	else
 	{
@@ -10172,6 +10203,10 @@ window.CreateEsoBuildItemSaveData = function (saveData, inputValues)
 		saveData.Stats["LastFoodEatenLink"] = g_EsoBuildItemData.Food.link;
 		saveData.Stats["LastFoodEatenName"] = g_EsoBuildItemData.Food.name;
 		saveData.Stats["LastFoodEatenType"] = g_EsoBuildItemData.Food.type == 4 ? "Food" : "Drink";
+		if (g_EsoBuildItemData.Food.quality != null && g_EsoBuildItemData.Food.quality !== "")
+			saveData.Stats["LastFoodEatenQuality"] = "" + g_EsoBuildItemData.Food.quality;
+		else
+			saveData.Stats["LastFoodEatenQuality"] = "4";
 	}
 	
 	return saveData;
@@ -10559,8 +10594,24 @@ window.OnEsoBuildCreateCopy = function (e)
 window.EsoParseItemIdFromItemLink = function (link)
 {
 	if (link == null || typeof link !== "string") return null;
-	var m = link.match(/:item:([0-9]+):/);
+	var m = link.match(/:item:([0-9]+):/i);
 	return m ? parseInt(m[1], 10) : null;
+};
+
+
+/**
+ * UESP / in-game link segment order: itemId, internalSubtype, internalLevel (see exportJson.php default link).
+ */
+window.EsoParseItemLinkDetailFromLink = function (link)
+{
+	if (link == null || typeof link !== "string") return null;
+	var m = link.match(/\|[hH][0-9]+:item:([0-9]+):([0-9]+):([0-9]+):/);
+	if (!m) return null;
+	var itemId = parseInt(m[1], 10);
+	var internalSubtype = parseInt(m[2], 10);
+	var internalLevel = parseInt(m[3], 10);
+	if (isNaN(itemId) || itemId <= 0 || isNaN(internalSubtype) || isNaN(internalLevel)) return null;
+	return { itemId: itemId, internalSubtype: internalSubtype, internalLevel: internalLevel };
 };
 
 
@@ -10652,16 +10703,91 @@ window.EsoApplyLocalSavedataBuffs = function (buffs)
 };
 
 
-window.EsoApplyLocalSavedataChampionPoints = function (cps)
+/**
+ * Write saved CP into .esovcpPointInput then refresh discipline totals.
+ * UpdateEsoCpData() reads the DOM; setting g_EsoCpData alone gets overwritten.
+ * CP v2: slottable stars only count as unlocked when on the equip bar; run
+ * UpdateCP2SkillPurchaseable before restoring slots (it clears invalid stars).
+ * Stat rules parse cpData.description — it must match point counts, so refresh
+ * .esovcpSkillDesc via UpdateEsoCPDiscSkillDesc (same as +/- / input handlers).
+ */
+window.SyncEsoChampionPointsInputsFromSave = function (cps)
 {
-	if (cps == null) return;
-	for (var cpId in cps)
+	if (cps == null || typeof cps !== "object") return;
+	var touched = {};
+	var domSkillIdBySaveKey = {};
+	if (window.g_EsoCpIsV2)
 	{
-		var rec = cps[cpId];
-		if (g_EsoCpData[cpId] == null || rec == null) continue;
-		if (rec.points != null)
-			g_EsoCpData[cpId].points = parseInt(rec.points, 10);
+		$("#esovcpSkillEquipBar").find(".esovcpSkillEquipBarSlot").attr("skillid", "-1").find("img").attr("src", "").hide();
 	}
+	for (var k in cps)
+	{
+		var rec = cps[k];
+		if (rec == null) continue;
+		var tryKeys = [];
+		if (k != null && k !== "") tryKeys.push(String(k));
+		if (rec.abilityId != null && rec.abilityId !== "") tryKeys.push(String(rec.abilityId));
+		var kNum = parseInt(k, 10);
+		if (!isNaN(kNum) && tryKeys.indexOf(String(kNum)) < 0) tryKeys.push(String(kNum));
+		var $row = $();
+		for (var ti = 0; ti < tryKeys.length; ti++)
+		{
+			var skTry = tryKeys[ti];
+			$row = $("#esovcpContainer").find(".esovcp2Skill[skillid='" + skTry + "'], .esovcpSkill[skillid='" + skTry + "']");
+			if ($row.length) break;
+		}
+		if ($row.length === 0) continue;
+		var domSkillId = $row.first().attr("skillid");
+		if (domSkillId != null && domSkillId !== "")
+			domSkillIdBySaveKey[k] = domSkillId;
+		var $inp = $row.find(".esovcpPointInput").not(".esovcpPointInputCluster").first();
+		if ($inp.length === 0) continue;
+		var pts = parseInt(rec.points, 10);
+		if (isNaN(pts) || pts < 0) pts = 0;
+		$inp.val(pts);
+		var $skillsWrap = $row.closest("[id^='skills_']");
+		if ($skillsWrap.length)
+		{
+			var sid = $skillsWrap.attr("id");
+			if (sid != null && sid.indexOf("skills_") === 0)
+				touched[sid.substring(7)] = true;
+		}
+	}
+	for (var discId1 in touched)
+	{
+		if (typeof UpdateEsoCPDiscSkillDesc === "function")
+			UpdateEsoCPDiscSkillDesc(discId1);
+	}
+	if (typeof UpdateCP2SkillPurchaseable === "function")
+		UpdateCP2SkillPurchaseable();
+	if (window.g_EsoCpIsV2)
+	{
+		for (var k2 in cps)
+		{
+			var rec2 = cps[k2];
+			if (rec2 == null) continue;
+			var barSkillId = domSkillIdBySaveKey[k2];
+			if (barSkillId == null || barSkillId === "")
+			{
+				barSkillId = String(k2);
+				if (rec2.abilityId != null && rec2.abilityId !== "")
+					barSkillId = String(rec2.abilityId);
+			}
+			var slotIdx = parseInt(rec2.slotIndex, 10);
+			if (isNaN(slotIdx) || slotIdx <= 0) continue;
+			var $slot = $("#esovcpSkillEquipBar").find(".esovcpSkillEquipBarSlot[slotindex='" + slotIdx + "']");
+			if ($slot.length === 0) continue;
+			$slot.attr("skillid", barSkillId);
+			$slot.find("img").attr("src", "//esolog.uesp.net/resources/cpstar_white.png").show();
+		}
+	}
+	for (var discId in touched)
+	{
+		if (typeof UpdateEsoCPDiscPoints === "function")
+			UpdateEsoCPDiscPoints(discId);
+	}
+	if (window.g_EsoCpIsV2 && typeof OnCp2StarEquipChange === "function")
+		OnCp2StarEquipChange();
 };
 
 
@@ -10697,6 +10823,42 @@ window.EsoApplyLocalSavedataActionBars = function (actionBars)
 };
 
 
+/**
+ * Food/drink is stored under Stats (LastFoodEaten*), not EquipSlots — merge a Food row for async load.
+ */
+window.EsoBuildMergedEquipSlotsForLocalLoad = function (saveData)
+{
+	var equip = $.extend({}, (saveData && saveData.EquipSlots) ? saveData.EquipSlots : {});
+	var stats = saveData && saveData.Stats;
+	if (stats == null) return equip;
+	var foodLink = stats.LastFoodEatenLink || stats.lastFoodEatenLink || "";
+	if (foodLink != null && typeof foodLink !== "string")
+		foodLink = String(foodLink);
+	foodLink = (foodLink || "").trim();
+	if (foodLink === "")
+		return equip;
+	if (equip.Food != null && equip.Food.itemLink != null && equip.Food.itemLink !== "")
+		return equip;
+	var level = parseInt(stats.LastFoodEatenLevel, 10);
+	var cpTier = parseInt(stats.LastFoodEatenCP, 10);
+	if (!isNaN(cpTier) && cpTier > 0)
+		level = 50 + Math.floor(cpTier / 10);
+	else if (isNaN(level) || level < 1)
+		level = 50;
+	var foodQuality = 4;
+	var qTry = parseInt(stats.LastFoodEatenQuality, 10);
+	if (!isNaN(qTry) && qTry >= 1 && qTry <= 6)
+		foodQuality = qTry;
+	equip.Food = {
+		itemLink: foodLink,
+		level: level,
+		quality: foodQuality,
+		equipType: 12,
+	};
+	return equip;
+};
+
+
 window.EsoApplyLocalSavedataEquipSlotsAsync = function (equipSlots, onDone)
 {
 	var keys = [];
@@ -10716,7 +10878,8 @@ window.EsoApplyLocalSavedataEquipSlotsAsync = function (equipSlots, onDone)
 			next();
 			return;
 		}
-		var itemId = EsoParseItemIdFromItemLink(row.itemLink);
+		var linkDetail = EsoParseItemLinkDetailFromLink(row.itemLink);
+		var itemId = linkDetail && linkDetail.itemId > 0 ? linkDetail.itemId : EsoParseItemIdFromItemLink(row.itemLink);
 		if (itemId == null || itemId <= 0)
 		{
 			next();
@@ -10730,11 +10893,23 @@ window.EsoApplyLocalSavedataEquipSlotsAsync = function (equipSlots, onDone)
 			next();
 			return;
 		}
-		var intData = GetEsoIntDataFromLevelQuality(level, quality, equipType);
+		var intData = null;
+		if (linkDetail != null && linkDetail.itemId === itemId && linkDetail.internalLevel >= 0 && linkDetail.internalSubtype >= 0)
+			intData = { level: linkDetail.internalLevel, type: linkDetail.internalSubtype };
 		if (intData == null)
 		{
-			next();
-			return;
+			intData = GetEsoIntDataFromLevelQuality(level, quality, equipType);
+			if (intData == null)
+			{
+				intData = GetEsoIntDataFromLevelQuality(Math.min(Math.max(level, 1), 50), quality, equipType);
+				if (intData == null && (slotId === "Food" || equipType === 12))
+					intData = { level: 1, type: 1 };
+				if (intData == null)
+				{
+					next();
+					return;
+				}
+			}
 		}
 		var tempItemData = {};
 		tempItemData.itemId = itemId;
@@ -10742,6 +10917,7 @@ window.EsoApplyLocalSavedataEquipSlotsAsync = function (equipSlots, onDone)
 		tempItemData.quality = quality;
 		tempItemData.internalLevel = intData.level;
 		tempItemData.internalSubtype = intData.type;
+		tempItemData.itemLink = row.itemLink;
 		var element = $("#esotbItem" + slotId);
 		if (element.length === 0)
 		{
@@ -10756,14 +10932,98 @@ window.EsoApplyLocalSavedataEquipSlotsAsync = function (equipSlots, onDone)
 			"limit" : 1,
 		};
 		if (g_EsoBuildLastInputValues && g_EsoBuildLastInputValues.UseAlternateVersion) queryParams.version = g_EsoBuildAlternateVersion;
+		function finishFoodSlotLoad(data, status, xhr)
+		{
+			OnEsoItemDataReceive(data, status, xhr, element, tempItemData);
+			next();
+		}
 		$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), { data: queryParams })
 			.done(function (data, status, xhr) {
-				OnEsoItemDataReceive(data, status, xhr, element, tempItemData);
-				next();
+				if ((slotId === "Food" || slotId === "Potion") && (data.minedItem == null || data.minedItem[0] == null))
+				{
+					var looseParams = { table: "minedItem", id: itemId, limit: 1 };
+					if (g_EsoBuildLastInputValues && g_EsoBuildLastInputValues.UseAlternateVersion) looseParams.version = g_EsoBuildAlternateVersion;
+					$.ajax(EsoEsoLogApiScriptUrl("exportJson.php"), { data: looseParams })
+						.done(finishFoodSlotLoad)
+						.fail(function () { next(); });
+					return;
+				}
+				finishFoodSlotLoad(data, status, xhr);
 			})
 			.fail(function () { next(); });
 	}
 	next();
+};
+
+
+window.EsoLocalSavedataStatKeyToDomStatId = function (statKey)
+{
+	if (statKey == null) return statKey;
+	var aliases = {
+		"AttributesHealth": "AttributeHealth",
+		"AttributesMagicka": "AttributeMagicka",
+		"AttributesStamina": "AttributeStamina",
+		"AttributesTotal": "AttributeTotal",
+		"Mundus": "Mundus.Name",
+		"Mundus2": "Mundus.Name2",
+	};
+	if (aliases[statKey] !== undefined)
+		return aliases[statKey];
+	if (statKey.indexOf("Target:") === 0)
+		return "Target." + statKey.substring(7);
+	return statKey;
+};
+
+
+/**
+ * Repurchase each saved ability so esoskills DOM matches g_EsoSkill* data (must run after race/class change).
+ */
+window.SyncLocalSavedataSkillBlocksViaPurchase = function (skills)
+{
+	if (skills == null || typeof skills !== "object") return;
+	var list = [];
+	for (var k in skills)
+	{
+		var d = skills[k];
+		if (d == null || d.abilityId == null) continue;
+		var aid = parseInt(d.abilityId, 10);
+		if (isNaN(aid) || aid <= 0) continue;
+		var t = (d.type || "").toLowerCase();
+		var pri = (t === "passive") ? 0 : ((t === "ultimate") ? 2 : 1);
+		list.push({ pri: pri, aid: aid });
+	}
+	list.sort(function (a, b) {
+		if (a.pri !== b.pri) return a.pri - b.pri;
+		return a.aid - b.aid;
+	});
+	var seen = {};
+	for (var i = 0; i < list.length; i++)
+	{
+		var aid = list[i].aid;
+		if (seen[aid]) continue;
+		seen[aid] = true;
+		if (typeof PurchaseEsoSkill === "function")
+			PurchaseEsoSkill(aid);
+	}
+	UpdateEsoSkillTotalPoints();
+};
+
+
+window.SyncEsoBuffCheckboxesFromBuffData = function ()
+{
+	for (var buffName in g_EsoBuildBuffData)
+	{
+		var buffData = g_EsoBuildBuffData[buffName];
+		if (buffData == null) continue;
+		var parentId = buffName.replace(/\W/g, "_");
+		var $parent = $("#esotbBuff_" + parentId);
+		if ($parent.length === 0) continue;
+		$parent.find(".esotbBuffCheck").first().prop("checked", !!buffData.enabled);
+		var $num = $parent.find(".esotbToggleBuffNumber");
+		if ($num.length && buffData.maxTimes)
+			$num.val(buffData.count);
+		UpdateEsoBuffItem($parent);
+	}
 };
 
 
@@ -10772,33 +11032,59 @@ window.ApplyEsoLocalBuildSaveData = function (saveData)
 	if (saveData == null) return;
 	if (saveData.Build != null)
 	{
-		if (saveData.Build.id != null)
+		var B = saveData.Build;
+		if (B.id != null)
+			g_EsoBuildData.id = parseInt(B.id, 10);
+		if (B.buildName != null)
 		{
-			g_EsoBuildData.id = parseInt(saveData.Build.id, 10);
+			$("#esotbBuildName").val(String(B.buildName));
+			g_EsoBuildData.buildName = B.buildName;
 		}
+		if (B.name != null)
+		{
+			$("#esotbCharName").val(String(B.name));
+			g_EsoBuildData.name = B.name;
+		}
+		if (B["class"] != null) g_EsoBuildData["class"] = B["class"];
+		if (B["race"] != null) g_EsoBuildData["race"] = B["race"];
+		if (B["alliance"] != null) g_EsoBuildData["alliance"] = B["alliance"];
 	}
 	if (saveData.Stats != null)
 	{
 		var st;
 		for (st in saveData.Stats)
 		{
-			EsoApplyLocalSaveDataStatToDom(st, saveData.Stats[st]);
+			var domId = EsoLocalSavedataStatKeyToDomStatId(st);
+			EsoApplyLocalSaveDataStatToDom(domId, saveData.Stats[st]);
 		}
 		EsoApplyLocalSavedataTogglesFromStats(saveData.Stats);
 	}
+
+	$("#esotbRace").trigger("change");
+	$("#esotbClass").trigger("change");
+
+	SyncLocalSavedataSkillBlocksViaPurchase(saveData.Skills);
+
 	EsoApplyLocalSavedataBuffs(saveData.Buffs);
-	EsoApplyLocalSavedataChampionPoints(saveData.ChampionPoints);
+	SyncEsoBuffCheckboxesFromBuffData();
+
+	SyncEsoChampionPointsInputsFromSave(saveData.ChampionPoints);
 	EsoApplyLocalSavedataActionBars(saveData.ActionBars);
 	UpdateEsoSkillBarData();
 	UpdateEsoSubclassData();
 	CopyEsoSkillsToItemTab();
 	UpdateEsoCpData();
-	UpdateEsoInitialBuffData();
-	UpdateEsoInitialToggleSetData();
-	UpdateEsoInitialToggleCpData();
-	UpdateEsoInitialToggleSkillData();
+
+	if (typeof UpdateEsoAllSkillDescription === "function")
+		UpdateEsoAllSkillDescription();
+	if (typeof UpdateEsoAllSkillCost === "function")
+		UpdateEsoAllSkillCost(false);
+	if (typeof UpdateEsoSkillBarDisplay === "function")
+		UpdateEsoSkillBarDisplay();
+
 	UpdateEsoComputedStatsList(true);
-	EsoApplyLocalSavedataEquipSlotsAsync(saveData.EquipSlots || {}, function () {
+	$(document).trigger("esocpUpdate");
+	EsoApplyLocalSavedataEquipSlotsAsync(EsoBuildMergedEquipSlotsForLocalLoad(saveData), function () {
 		UpdateEsoBuildItemLinkSetCounts();
 		UpdateEsoComputedStatsList(true);
 		$(document).trigger("esocpUpdate");

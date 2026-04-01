@@ -5386,13 +5386,13 @@ window.RemoveEsoClassSkillsFromPassiveData = function()
 	
 	for (var index in deletePassiveIds)
 	{
-		var skillId = deleteSkillIds[index];
+		var skillId = deletePassiveIds[index];
 		delete g_EsoSkillPassiveData[skillId];
 	}
 	
 	for (var index in deleteActiveIds)
 	{
-		var skillId = deleteSkillIds[index];
+		var skillId = deleteActiveIds[index];
 		delete g_EsoSkillActiveData[skillId];
 	}
 }
