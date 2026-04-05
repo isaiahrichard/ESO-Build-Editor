@@ -81,6 +81,9 @@ class CEsoLogJsonExport
 			//"skillTooltips32pts",
 			//"skillTooltips33pts",
 			//"skillTooltips34pts",
+			"craftedSkills",
+			"craftedScripts",
+			"craftedScriptDescriptions",
 	);
 	
 	
@@ -106,6 +109,9 @@ class CEsoLogJsonExport
 			"uniqueQuest" => "internalId",
 			"skillTree" => "abilityId",
 			"skillTooltips" => "id",
+			"craftedSkills" => "id",
+			"craftedScripts" => "id",
+			"craftedScriptDescriptions" => "id",
 	);
 	
 	

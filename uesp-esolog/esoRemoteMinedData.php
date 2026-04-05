@@ -222,6 +222,26 @@ function uesp_eso_export_payload_has_tables($data, array $tables)
 
 
 /**
+ * Non-empty crafted/scribing tables (grimoires + scripts) for import-mined-data.php --only-crafted.
+ *
+ * @param array<string,mixed> $data
+ */
+function uesp_eso_export_payload_has_crafted_tables($data)
+{
+	if (!is_array($data) || !empty($data['error'])) {
+		return false;
+	}
+	$tables = array('craftedSkills', 'craftedScripts', 'craftedScriptDescriptions');
+	foreach ($tables as $t) {
+		if (!array_key_exists($t, $data) || !is_array($data[$t]) || count($data[$t]) < 1) {
+			return false;
+		}
+	}
+	return true;
+}
+
+
+/**
  * Read merged export JSON from workspace data/uesp-export/ (written by scripts/import-mined-data.php).
  *
  * @param list<string> $tables

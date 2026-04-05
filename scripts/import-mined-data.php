@@ -63,6 +63,16 @@
  *   php scripts/import-mined-data.php --backfill-mined-item-from-summary
  * Optional: --backfill-batch-size=80 --backfill-sleep-ms=250
  * Env: UESP_ESO_MINED_ITEM_ID_BATCH (default 80), UESP_ESO_MINED_ITEM_BACKFILL_SLEEP_MS
+ *
+ * Scribing (crafted grimoires + focus/signature/affix scripts):
+ *   php scripts/import-mined-data.php --only-crafted
+ * Or save JSON from a browser (same host as exportJson) then:
+ *   php scripts/import-mined-data.php --only-crafted --from-file=data/uesp-export/crafted-export.json
+ * Browser URL (version 49 example):
+ *   https://esolog.uesp.net/exportJson.php?version=49&table%5B%5D=craftedSkills&table%5B%5D=craftedScripts&table%5B%5D=craftedScriptDescriptions
+ * Requires exportJson.php to whitelist those tables (see uesp-esolog/exportJson.php). Until the public API
+ * includes them, use a saved JSON file from an environment that has the data, or run exportJson locally
+ * against a MySQL database that already contains the rows.
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -93,6 +103,7 @@ $withItemSearch = false;
 $backfillMinedItemFromSummary = false;
 $backfillBatchSize = 0;
 $backfillSleepMs = -1;
+$onlyCrafted = false;
 
 foreach (array_slice($argv, 1) as $arg) {
 	if (preg_match('/^--version=(.+)$/', $arg, $m)) {
@@ -107,6 +118,8 @@ foreach (array_slice($argv, 1) as $arg) {
 		$withItemSearch = true;
 	} elseif ($arg === '--backfill-mined-item-from-summary') {
 		$backfillMinedItemFromSummary = true;
+	} elseif ($arg === '--only-crafted') {
+		$onlyCrafted = true;
 	} elseif (preg_match('/^--backfill-batch-size=(\d+)$/', $arg, $m)) {
 		$backfillBatchSize = (int) $m[1];
 	} elseif (preg_match('/^--backfill-sleep-ms=(\d+)$/', $arg, $m)) {
@@ -131,6 +144,11 @@ foreach (array_slice($argv, 1) as $arg) {
 
 if ($onlyItemSearch && $withItemSearch) {
 	fwrite(STDERR, "Use either --only-item-search or --with-item-search, not both.\n");
+	exit(1);
+}
+
+if ($onlyCrafted && ($onlyItemSearch || $withItemSearch || $backfillMinedItemFromSummary)) {
+	fwrite(STDERR, "Do not combine --only-crafted with item-search or backfill options.\n");
 	exit(1);
 }
 
@@ -444,6 +462,71 @@ function uesp_backfill_mined_item_from_summary(mysqli $db, string $version, int 
 	}
 
 	echo "Backfill minedItem finished: about $totalRows row(s) inserted in $nChunks chunk(s).\n";
+}
+
+if ($onlyCrafted) {
+	global $uespEsoLogReadDBHost, $uespEsoLogReadUser, $uespEsoLogReadPW, $uespEsoLogDatabase;
+
+	$craftedTables = array('craftedSkills', 'craftedScripts', 'craftedScriptDescriptions');
+	$data = null;
+
+	if (count($fromFiles) > 0) {
+		$data = array();
+		foreach ($fromFiles as $fromFile) {
+			if (!is_readable($fromFile)) {
+				fwrite(STDERR, "Cannot read file: $fromFile\n");
+				exit(1);
+			}
+			$raw = file_get_contents($fromFile);
+			$chunk = json_decode($raw, true);
+			if (!is_array($chunk)) {
+				fwrite(STDERR, "Invalid JSON in $fromFile\n");
+				exit(1);
+			}
+			foreach ($craftedTables as $t) {
+				if (array_key_exists($t, $chunk) && is_array($chunk[$t]) && count($chunk[$t]) > 0) {
+					$data[$t] = $chunk[$t];
+				}
+			}
+			echo "Loaded crafted table keys from $fromFile\n";
+		}
+	} else {
+		if (!defined('UESP_ESO_REMOTE_EXPORT_JSON_URL') || UESP_ESO_REMOTE_EXPORT_JSON_URL === '') {
+			define('UESP_ESO_REMOTE_EXPORT_JSON_URL', 'https://esolog.uesp.net/exportJson.php');
+		}
+		echo "Fetching craftedSkills + craftedScripts + craftedScriptDescriptions from UESP (version=$version)...\n";
+		$data = uesp_eso_fetch_export_json_via_http($version, $craftedTables, true);
+	}
+
+	if ($data === null || !uesp_eso_export_payload_has_crafted_tables($data)) {
+		fwrite(STDERR, "Crafted import failed: need non-empty craftedSkills, craftedScripts, and craftedScriptDescriptions.\n");
+		fwrite(STDERR, "If the API returned errors, exportJson on the server must allow these tables (uesp-esolog/exportJson.php).\n");
+		fwrite(STDERR, "Save JSON from a browser to data/uesp-export/crafted-export.json, then:\n");
+		fwrite(STDERR, "  php scripts/import-mined-data.php --only-crafted --from-file=data/uesp-export/crafted-export.json\n");
+		exit(1);
+	}
+
+	uesp_eso_cli_progress_log('--only-crafted: version=' . $version);
+	uesp_eso_cli_progress_log('MySQL: connecting to ' . $uespEsoLogReadDBHost . ' database ' . $uespEsoLogDatabase . ' ...');
+
+	$db = new mysqli($uespEsoLogReadDBHost, $uespEsoLogReadUser, $uespEsoLogReadPW, $uespEsoLogDatabase);
+	if ($db->connect_error) {
+		fwrite(STDERR, 'MySQL connect failed: ' . $db->connect_error . "\n");
+		exit(1);
+	}
+	$db->set_charset('utf8mb4');
+	uesp_eso_cli_progress_log('MySQL: connected');
+
+	$craftedBatch = array('craftedSkills' => 8, 'craftedScripts' => 15, 'craftedScriptDescriptions' => 10);
+	foreach ($craftedTables as $t) {
+		$bs = array_key_exists($t, $craftedBatch) ? $craftedBatch[$t] : 12;
+		uesp_bulk_insert($db, $t, uesp_normalize_export_rows($data[$t]), $bs);
+	}
+	$db->close();
+
+	echo "Crafted/scribing tables imported (" . implode(', ', $craftedTables) . ").\n";
+	echo "If scribed skills still show wrong tooltips, ensure minedSkills includes rows with isCrafted=1 and id>50000000 (full skills import).\n";
+	exit(0);
 }
 
 if ($backfillMinedItemFromSummary) {
