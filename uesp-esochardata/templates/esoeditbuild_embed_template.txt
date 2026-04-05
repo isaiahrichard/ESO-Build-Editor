@@ -17,6 +17,7 @@
 			<div class="esotbStatTab esotbStatTabSelected" tabid="esotbStatBlockGeneral">General</div>
 			<div class="esotbStatTab" tabid="esotbStatBlockItems">Items</div>
 			<div class="esotbStatTab" tabid="esotbStatBlockSets">Sets</div>
+			<div class="esotbStatTab" tabid="esotbStatBlockSubclassing">Subclass</div>
 			<div class="esotbStatTab" tabid="esotbStatBlockSkills">Skills</div>
 			<div class="esotbStatTab" tabid="esotbStatBlockBuffs">Buffs</div>
 			<div class="esotbStatTab" tabid="esotbStatBlockCPs">CPs</div>
@@ -1504,6 +1505,30 @@
 				<hr>
 				The following data is information on all worn sets.
 				<div id="esotbSetInfo">
+				</div>
+			</div>
+		</div>
+		<div id="esotbStatBlockSubclassing" class="esotbStatBlock" style="display: none;">
+			<div id="esotbSubclassingRoot">
+				<h3>Subclassing</h3>
+				<hr>
+				<p>Each slot matches one of your three base class skill line positions. Choose the original line or substitute a line from another class. Unlocks work like the skill tree (full line access).</p>
+				<ul>
+					<li>You must keep <b>at least one</b> original skill line from your class (General tab).</li>
+					<li>You may only take <b>one</b> skill line from any other class (no two lines from the same non-base class).</li>
+				</ul>
+				<div id="esotbSubclassingError" style="display:none; color: #c0392b; margin: 8px 0;"></div>
+				<div class="esotbSubclassingSlot" style="margin-bottom: 12px;">
+					<div class="esotbStatLabel" id="esotbSubclassSlotLabel1">Slot 1</div>
+					<select id="esotbSubclassSelect1" class="esotbInputSize2 esotbSubclassSelect" data-slot="1"></select>
+				</div>
+				<div class="esotbSubclassingSlot" style="margin-bottom: 12px;">
+					<div class="esotbStatLabel" id="esotbSubclassSlotLabel2">Slot 2</div>
+					<select id="esotbSubclassSelect2" class="esotbInputSize2 esotbSubclassSelect" data-slot="2"></select>
+				</div>
+				<div class="esotbSubclassingSlot">
+					<div class="esotbStatLabel" id="esotbSubclassSlotLabel3">Slot 3</div>
+					<select id="esotbSubclassSelect3" class="esotbInputSize2 esotbSubclassSelect" data-slot="3"></select>
 				</div>
 			</div>
 		</div>

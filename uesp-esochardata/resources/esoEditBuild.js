@@ -5057,6 +5057,8 @@ window.OnEsoClassChange = function (e)
 	
 	UpdateEsoSkillBarDisplay();
 	
+	EsoBuildRefreshSubclassingTab();
+	
 	UpdateEsoComputedStatsList("async");
 }
 
@@ -6303,6 +6305,10 @@ window.OnEsoClickBuildStatTab = function (e)
 	else if (tabId == "esotbStatBlockSkills")
 	{
 		UpdateEsoBuildSkillTab();
+	}
+	else if (tabId == "esotbStatBlockSubclassing")
+	{
+		EsoBuildRefreshSubclassingTab();
 	}
 	
 }
@@ -15548,6 +15554,247 @@ window.g_EsoBuildSubclassCurrentSkillIndex = 0;
 window.g_EsoBuildSubclassCurrentElement = null;
 
 
+window.EsoBuildGetActiveClassSkillLineTitle = function (skillLineIndex)
+{
+	return $("#esovsSkillTree .esovsSkillTypeActiveClass .esovsSkillLineTitle[skilllineindex=" + skillLineIndex + "]");
+};
+
+
+window.EsoBuildCountNativeSubclassSlots = function ()
+{
+	var n = 0;
+	for (var i = 1; i <= 3; i++)
+	{
+		var sub = EsoBuildGetActiveClassSkillLineTitle(i).attr("subclass");
+		if (sub == null || sub === "") ++n;
+	}
+	return n;
+};
+
+
+window.EsoBuildFinishSubclassLineUpdates = function ()
+{
+	UpdateEsoAllSkillDescription();
+	UpdateEsoAllSkillCost();
+	UpdateEsoSkillRawData();
+	UpdateEsoSkillCoefData();
+	UpdateSkillLink();
+	UpdateEsoComputedStatsList();
+};
+
+
+window.EsoBuildSubclassSwapIsAllowed = function (skillLineIndex, donorClass, donorSkillLine, isResetToNative)
+{
+	skillLineIndex = parseInt(skillLineIndex, 10);
+	if (isNaN(skillLineIndex)) return false;
+	
+	if (isResetToNative) return true;
+	
+	var baseClass = $("#esotbClass").val();
+	if (baseClass == null || baseClass === "")
+		baseClass = g_EsoBuildLastInputValues.Class;
+	if (donorClass === baseClass) return false;
+	
+	for (var j = 1; j <= 3; j++)
+	{
+		if (j == skillLineIndex) continue;
+		var other = g_EsoBuildSubclassData["Subclass" + j];
+		if (other && other === donorClass) return false;
+	}
+	
+	var $sl = EsoBuildGetActiveClassSkillLineTitle(skillLineIndex);
+	var sub = $sl.attr("subclass");
+	var wasNative = (sub == null || sub === "");
+	if (wasNative && EsoBuildCountNativeSubclassSlots() < 2) return false;
+	
+	return true;
+};
+
+
+window.EsoBuildApplySubclassSwap = function (skillLineIndex, donorClass, donorSkillLine)
+{
+	skillLineIndex = parseInt(skillLineIndex, 10);
+	if (isNaN(skillLineIndex)) return false;
+	
+	var $skillLine = EsoBuildGetActiveClassSkillLineTitle(skillLineIndex);
+	if ($skillLine.length === 0) return false;
+	
+	var oldLineId = $skillLine.attr("skilllineid");
+	
+	$skillLine.attr("subclassid", donorSkillLine);
+	$skillLine.attr("subclass", donorClass);
+	$skillLine.attr("skilllineid", donorSkillLine);
+	$skillLine.text(donorSkillLine);
+	
+	if (skillLineIndex === 1)
+	{
+		g_EsoBuildSubclassData.Subclass1 = donorClass;
+		g_EsoBuildSubclassData.SubclassSkillLine1 = donorSkillLine;
+	}
+	else if (skillLineIndex === 2)
+	{
+		g_EsoBuildSubclassData.Subclass2 = donorClass;
+		g_EsoBuildSubclassData.SubclassSkillLine2 = donorSkillLine;
+	}
+	else if (skillLineIndex === 3)
+	{
+		g_EsoBuildSubclassData.Subclass3 = donorClass;
+		g_EsoBuildSubclassData.SubclassSkillLine3 = donorSkillLine;
+	}
+	
+	EsoResetSkillLine(oldLineId, true);
+	
+	$(".esovsSkillLineTitleHighlight").removeClass("esovsSkillLineTitleHighlight");
+	$skillLine.addClass("esovsSkillLineTitleHighlight");
+	EsoSkillShowSkillLine(donorSkillLine);
+	EsoBuildFinishSubclassLineUpdates();
+	return true;
+};
+
+
+window.EsoBuildResetSubclassSlot = function (skillLineIndex)
+{
+	skillLineIndex = parseInt(skillLineIndex, 10);
+	if (isNaN(skillLineIndex)) return false;
+	
+	var $skillLine = EsoBuildGetActiveClassSkillLineTitle(skillLineIndex);
+	if ($skillLine.length === 0) return false;
+	
+	var subclassedLine = $skillLine.attr("skilllineid");
+	var origSkillLine = $skillLine.attr("origskilllineid");
+	
+	if (skillLineIndex === 1)
+	{
+		g_EsoBuildSubclassData.Subclass1 = "";
+		g_EsoBuildSubclassData.SubclassSkillLine1 = "";
+	}
+	else if (skillLineIndex === 2)
+	{
+		g_EsoBuildSubclassData.Subclass2 = "";
+		g_EsoBuildSubclassData.SubclassSkillLine2 = "";
+	}
+	else if (skillLineIndex === 3)
+	{
+		g_EsoBuildSubclassData.Subclass3 = "";
+		g_EsoBuildSubclassData.SubclassSkillLine3 = "";
+	}
+	
+	$skillLine.attr("subclassid", "");
+	$skillLine.attr("subclass", "");
+	$skillLine.attr("skilllineid", origSkillLine);
+	$skillLine.text(origSkillLine);
+	
+	EsoResetSkillLine(subclassedLine, true);
+	
+	$(".esovsSkillLineTitleHighlight").removeClass("esovsSkillLineTitleHighlight");
+	$skillLine.addClass("esovsSkillLineTitleHighlight");
+	EsoSkillShowSkillLine(origSkillLine);
+	EsoBuildFinishSubclassLineUpdates();
+	return true;
+};
+
+
+window.EsoBuildRefreshSubclassingTab = function (clearSubclassingError)
+{
+	if (clearSubclassingError !== false)
+		$("#esotbSubclassingError").hide().text("");
+	
+	var baseClass = $("#esotbClass").val();
+	if (baseClass == null || baseClass === "")
+		baseClass = g_EsoBuildLastInputValues.Class;
+	if (baseClass == null || baseClass === "") return;
+	
+	for (var s = 1; s <= 3; s++)
+	{
+		var $sl = EsoBuildGetActiveClassSkillLineTitle(s);
+		var orig = $sl.attr("origskilllineid");
+		if (orig == null || orig === "") orig = "—";
+		$("#esotbSubclassSlotLabel" + s).text("Slot " + s + " — " + orig);
+		
+		var usedByOthers = {};
+		for (var j = 1; j <= 3; j++)
+		{
+			if (j === s) continue;
+			var oc = g_EsoBuildSubclassData["Subclass" + j];
+			if (oc) usedByOthers[oc] = true;
+		}
+		
+		var $select = $("#esotbSubclassSelect" + s);
+		if ($select.length === 0) continue;
+		
+		var currentVal = "__native__";
+		var sub = $sl.attr("subclass");
+		if (sub && sub !== "")
+			currentVal = sub + "|" + $sl.attr("subclassid");
+		
+		$select.empty();
+		$select.append($("<option></option>").val("__native__").text("Original: " + orig));
+		
+		$("#esovsSubclassPopupRoot .esovsSubclassPopupClass").each(function ()
+		{
+			var $classBlock = $(this);
+			var className = $classBlock.attr("classid");
+			if (className == null || className === "" || className === baseClass) return;
+			if (usedByOthers[className]) return;
+			
+			var $og = $("<optgroup></optgroup>").attr("label", className);
+			$classBlock.find(".esovsSubclassPopupChoice").each(function ()
+			{
+				var $choice = $(this);
+				var lineName = $choice.attr("skilllineid");
+				if (lineName == null || lineName === "") return;
+				var val = className + "|" + lineName;
+				$og.append($("<option></option>").val(val).text(lineName));
+			});
+			if ($og.children().length > 0) $select.append($og);
+		});
+		
+		if ($select.find("option").filter(function () { return $(this).val() === currentVal; }).length === 0)
+			currentVal = "__native__";
+		$select.val(currentVal);
+		if ($select.val() !== currentVal)
+			$select.val("__native__");
+	}
+};
+
+
+window.EsoBuildOnSubclassingTabSelectChange = function ()
+{
+	var $sel = $(this);
+	var slot = parseInt($sel.attr("data-slot"), 10);
+	if (isNaN(slot) || slot < 1 || slot > 3) return;
+	
+	var v = $sel.val();
+	if (v == null) return;
+	
+	$("#esotbSubclassingError").hide().text("");
+	
+	if (v === "__native__")
+	{
+		EsoBuildResetSubclassSlot(slot);
+		EsoBuildRefreshSubclassingTab();
+		return;
+	}
+	
+	var pipe = v.indexOf("|");
+	if (pipe < 0) return;
+	var donorClass = v.substring(0, pipe);
+	var donorLine = v.substring(pipe + 1);
+	
+	if (!EsoBuildSubclassSwapIsAllowed(slot, donorClass, donorLine, false))
+	{
+		var bc = $("#esotbClass").val();
+		if (bc == null || bc === "") bc = g_EsoBuildLastInputValues.Class;
+		EsoBuildRefreshSubclassingTab(false);
+		$("#esotbSubclassingError").text("That swap is not allowed: keep at least one original " + bc + " skill line, and only one line from any other class.").show();
+		return;
+	}
+	
+	EsoBuildApplySubclassSwap(slot, donorClass, donorLine);
+	EsoBuildRefreshSubclassingTab();
+};
+
+
 window.OnEsoSubclassSkill = function(e)
 {
 	var $this = $(this);
@@ -15603,50 +15850,13 @@ window.OnEsoSubclassSkill = function(e)
 
 window.OnEsoSubclassReset = function(e)
 {
-	var $this = $(this);
-	var currentClass = g_EsoBuildLastInputValues.Class;
-	var currentSkillLine = g_EsoBuildSubclassCurrentElement.attr("skilllineid");
-	var origSkillLine = g_EsoBuildSubclassCurrentElement.attr("origskilllineid");
 	var $skillLine = g_EsoBuildSubclassCurrentElement.parent().next();
-	var subclassedLine = $skillLine.attr("skilllineid");
-	var skillLineIndex =  $skillLine.attr("skilllineindex");
-	
-	if (origSkillLine)
-	{
-		if (skillLineIndex == 1) {
-			g_EsoBuildSubclassData.Subclass1 = "";
-			g_EsoBuildSubclassData.SubclassSkillLine1 = "";
-		}
-		else if (skillLineIndex == 2) { 
-			g_EsoBuildSubclassData.Subclass2 = "";
-			g_EsoBuildSubclassData.SubclassSkillLine2 = "";
-		}
-		else if (skillLineIndex == 3) {
-			g_EsoBuildSubclassData.Subclass3 = "";
-			g_EsoBuildSubclassData.SubclassSkillLine3 = "";
-		}
-		
-		$skillLine.attr("subclassid", "");
-		$skillLine.attr("subclass", "");
-		$skillLine.attr("skilllineid", origSkillLine);
-		$skillLine.text(origSkillLine);
-	}
+	var skillLineIndex = parseInt($skillLine.attr("skilllineindex"), 10);
 	
 	HideEsoBuildClickWall();
 	
-	EsoResetSkillLine(subclassedLine, true);
-	
-	$(".esovsSkillLineTitleHighlight").removeClass("esovsSkillLineTitleHighlight");
-	$skillLine.addClass("esovsSkillLineTitleHighlight");
-	
-	EsoSkillShowSkillLine(origSkillLine);
-	UpdateEsoAllSkillDescription();
-	UpdateEsoAllSkillCost();
-	UpdateEsoSkillRawData();
-	UpdateEsoSkillCoefData();
-	UpdateSkillLink();
-	
-	UpdateEsoComputedStatsList();
+	EsoBuildResetSubclassSlot(skillLineIndex);
+	EsoBuildRefreshSubclassingTab();
 }
 
 
@@ -15662,42 +15872,20 @@ window.OnEsoSubclassChoiceClick = function(e)
 	var classChoosen = $this.attr("classid");
 	var skillLineChoosen = $this.attr("skilllineid");
 	var $skillLine = g_EsoBuildSubclassCurrentElement.parent().next();
-	var subclassedLine = $skillLine.attr("skilllineid");
-	var skillLineIndex =  $skillLine.attr("skilllineindex");
+	var skillLineIndex = parseInt($skillLine.attr("skilllineindex"), 10);
 	
-	$skillLine.attr("subclassid", skillLineChoosen);
-	$skillLine.attr("subclass", classChoosen);
-	$skillLine.attr("skilllineid", skillLineChoosen);
-	$skillLine.text(skillLineChoosen);
-	
-	if (skillLineIndex == 1) {
-		g_EsoBuildSubclassData.Subclass1 = classChoosen;
-		g_EsoBuildSubclassData.SubclassSkillLine1 = skillLineChoosen;
-	}
-	else if (skillLineIndex == 2) { 
-		g_EsoBuildSubclassData.Subclass2 = classChoosen;
-		g_EsoBuildSubclassData.SubclassSkillLine2 = skillLineChoosen;
-	}
-	else if (skillLineIndex == 3) {
-		g_EsoBuildSubclassData.Subclass3 = classChoosen;
-		g_EsoBuildSubclassData.SubclassSkillLine3 = skillLineChoosen;
+	if (!EsoBuildSubclassSwapIsAllowed(skillLineIndex, classChoosen, skillLineChoosen, false))
+	{
+		var bc = $("#esotbClass").val();
+		if (bc == null || bc === "") bc = g_EsoBuildLastInputValues.Class;
+		alert("That swap is not allowed: keep at least one original " + bc + " skill line, and only one line from any other class.");
+		return;
 	}
 	
 	HideEsoBuildClickWall();
 	
-	EsoResetSkillLine(subclassedLine, true);
-	
-	$(".esovsSkillLineTitleHighlight").removeClass("esovsSkillLineTitleHighlight");
-	$skillLine.addClass("esovsSkillLineTitleHighlight");
-	
-	EsoSkillShowSkillLine(skillLineChoosen);
-	UpdateEsoAllSkillDescription();
-	UpdateEsoAllSkillCost();
-	UpdateEsoSkillRawData();
-	UpdateEsoSkillCoefData();
-	UpdateSkillLink();
-	
-	UpdateEsoComputedStatsList();
+	EsoBuildApplySubclassSwap(skillLineIndex, classChoosen, skillLineChoosen);
+	EsoBuildRefreshSubclassingTab();
 }
 
 
@@ -15724,6 +15912,12 @@ window.esotbOnDocReady = function ()
 		"click.esotbMainStatTab",
 		"#esotbStatTabList .esotbStatTab",
 		OnEsoClickBuildStatTab
+	);
+	
+	$("#esotbSubclassingRoot").off("change.esotbSubclassing", ".esotbSubclassSelect").on(
+		"change.esotbSubclassing",
+		".esotbSubclassSelect",
+		EsoBuildOnSubclassingTabSelectChange
 	);
 	
 	if (window.g_EsoBuildRules == null) return;
@@ -15868,6 +16062,7 @@ window.esotbOnDocReady = function ()
 	g_EsoBuildEnableUpdates = false;
 	
 	UpdateEsoSubclassData();
+	EsoBuildRefreshSubclassingTab();
 	CopyEsoSkillsToItemTab();
 	UpdateEsoCpData();
 	UpdateAllEsoItemTraitLists();
