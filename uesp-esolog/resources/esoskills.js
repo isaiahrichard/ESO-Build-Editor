@@ -1499,7 +1499,13 @@ window.UpdateEsoSkillDurationDescription = function(skillData, coefDesc, inputVa
 
 window.GetEsoSkillDescription = function(skillId, inputValues, useHtml, noEffectLines, outputRaw)
 {
-	if (USE_V2_TOOLTIPS && window.g_EsoSkillHasV2Tooltips && window.GetEsoSkillDescription2) return GetEsoSkillDescription2(skillId, inputValues, useHtml, noEffectLines, outputRaw);
+	/* V2: normal skills when DB/export has skillTooltips; crafted/scribed also need V2 whenever GetEsoSkillDescription2 is loaded (see GetEsoCraftedSkillDescription2 in esoSkillTooltips.js). */
+	if (USE_V2_TOOLTIPS && window.GetEsoSkillDescription2)
+	{
+		var sd = g_SkillsData[skillId];
+		if (window.g_EsoSkillHasV2Tooltips || (sd && sd['useCraftedDesc']))
+			return GetEsoSkillDescription2(skillId, inputValues, useHtml, noEffectLines, outputRaw);
+	}
 	
 	var output = "";
 	var skillData = g_SkillsData[skillId];
@@ -5095,6 +5101,17 @@ window.UpdateEsoCraftedSkillActiveData = function (abilityId)
 	if (skillData)
 	{
 		g_EsoSkillActiveData[baseAbilityId].skillDesc = skillData['craftDesc'];
+		if (skillData.scriptId1 != null && skillData.scriptId1 !== "")
+			g_EsoSkillActiveData[baseAbilityId].scriptId1 = skillData.scriptId1;
+		if (skillData.scriptId2 != null && skillData.scriptId2 !== "")
+			g_EsoSkillActiveData[baseAbilityId].scriptId2 = skillData.scriptId2;
+		if (skillData.scriptId3 != null && skillData.scriptId3 !== "")
+			g_EsoSkillActiveData[baseAbilityId].scriptId3 = skillData.scriptId3;
+		var sc1 = skillData.scriptId1 != null && skillData.scriptId1 !== "" ? String(skillData.scriptId1) : "";
+		var sc2 = skillData.scriptId2 != null && skillData.scriptId2 !== "" ? String(skillData.scriptId2) : "";
+		var sc3 = skillData.scriptId3 != null && skillData.scriptId3 !== "" ? String(skillData.scriptId3) : "";
+		if (sc1 !== "" || sc2 !== "" || sc3 !== "")
+			g_EsoSkillActiveData[baseAbilityId].craftData = sc1 + "," + sc2 + "," + sc3;
 	}
 	else
 	{
@@ -6255,6 +6272,62 @@ window.MakeEsoCraftedSkillSlotHtml = function(craftedSkill, skillData, slots, sl
 };
 
 
+/* Mirrors CEsoViewSkills::FindBaseAbilityForActiveData (PHP) for activeData lookup. */
+window.FindEsoBaseAbilityForActiveData = function(abilityId)
+{
+	abilityId = parseInt(abilityId, 10);
+	if (isNaN(abilityId) || abilityId <= 0 || window.g_SkillsData == null) return abilityId;
+	var skillData = g_SkillsData[abilityId];
+	if (skillData == null) return abilityId;
+	if (parseInt(skillData.isCrafted, 10) === 1) return abilityId;
+	while (parseInt(skillData.prevSkill, 10) > 0)
+	{
+		var prevId = parseInt(skillData.prevSkill, 10);
+		skillData = g_SkillsData[prevId];
+		if (skillData == null) return abilityId;
+	}
+	var baseAbilityId = parseInt(skillData.abilityId, 10);
+	if (parseInt(skillData.isPassive, 10) !== 0) return baseAbilityId;
+	while (parseInt(skillData.nextSkill, 10) > 0)
+	{
+		var nextId = parseInt(skillData.nextSkill, 10);
+		skillData = g_SkillsData[nextId];
+		if (skillData == null) return baseAbilityId;
+		if (parseInt(skillData.rank, 10) === 4) return parseInt(skillData.abilityId, 10);
+	}
+	return baseAbilityId;
+};
+
+
+/* Mirrors CEsoViewSkills::findActiveDataForCraftedGrimoire — activeData keys are not always the grimoire id. */
+window.EsoFindActiveDataForCraftedGrimoire = function(grimoireAbilityId)
+{
+	grimoireAbilityId = parseInt(grimoireAbilityId, 10);
+	if (isNaN(grimoireAbilityId) || grimoireAbilityId <= 0 || window.g_EsoSkillActiveData == null) return null;
+	var direct = g_EsoSkillActiveData[grimoireAbilityId];
+	if (direct != null) return direct;
+	direct = g_EsoSkillActiveData[String(grimoireAbilityId)];
+	if (direct != null) return direct;
+	for (var key in g_EsoSkillActiveData)
+	{
+		if (!Object.prototype.hasOwnProperty.call(g_EsoSkillActiveData, key)) continue;
+		var ad = g_EsoSkillActiveData[key];
+		if (ad == null || typeof ad !== "object") continue;
+		var k = parseInt(key, 10);
+		if (k === grimoireAbilityId) return ad;
+		var bid = ad.baseAbilityId != null ? parseInt(ad.baseAbilityId, 10) : 0;
+		var aid = ad.abilityId != null ? parseInt(ad.abilityId, 10) : 0;
+		if (bid === grimoireAbilityId || aid === grimoireAbilityId) return ad;
+		if (aid > 0)
+		{
+			var base = parseInt(FindEsoBaseAbilityForActiveData(aid), 10);
+			if (base === grimoireAbilityId) return ad;
+		}
+	}
+	return null;
+};
+
+
 window.MakeEsoCraftedSkillHtml = function(craftedSkill, skillData)
 {
 	var output = "";
@@ -6290,6 +6363,23 @@ window.MakeEsoCraftedSkillHtml = function(craftedSkill, skillData)
 	craftedSkill['scriptId1'] = craftedSkill['slots1'][0];
 	craftedSkill['scriptId2'] = craftedSkill['slots2'][0];
 	craftedSkill['scriptId3'] = craftedSkill['slots3'][0];
+	
+	var grimoireId = parseInt(craftedSkill['abilityId'], 10);
+	var activePick = (typeof EsoFindActiveDataForCraftedGrimoire === "function") ? EsoFindActiveDataForCraftedGrimoire(grimoireId) : null;
+	if (activePick)
+	{
+		var p1 = activePick.scriptId1, p2 = activePick.scriptId2, p3 = activePick.scriptId3;
+		if (activePick.craftData != null && String(activePick.craftData) !== "")
+		{
+			var parts = String(activePick.craftData).split(",");
+			if ((p1 == null || p1 === "") && parts.length >= 1 && parts[0] !== "") p1 = parts[0];
+			if ((p2 == null || p2 === "") && parts.length >= 2 && parts[1] !== "") p2 = parts[1];
+			if ((p3 == null || p3 === "") && parts.length >= 3 && parts[2] !== "") p3 = parts[2];
+		}
+		if (p1 != null && p1 !== "") { var n1 = parseInt(p1, 10); if (!isNaN(n1)) craftedSkill['scriptId1'] = n1; }
+		if (p2 != null && p2 !== "") { var n2 = parseInt(p2, 10); if (!isNaN(n2)) craftedSkill['scriptId2'] = n2; }
+		if (p3 != null && p3 !== "") { var n3 = parseInt(p3, 10); if (!isNaN(n3)) craftedSkill['scriptId3'] = n3; }
+	}
 	
 	//var scriptData1 = craftedSkill['datas'][craftedSkill['scriptId1']];
 	//var repSkillData = 
@@ -6380,6 +6470,21 @@ window.AddEsoCraftedSkillEvents = function(addAll)
 		$(".esovsCraftedAbility .esovsAbilityBlockIcon").hover(OnHoverEsoIcon, OnLeaveEsoIcon);
 		$(".esovsCraftedAbility .esovsAbilityBlockPassiveIcon").hover(OnHoverEsoPassiveIcon, OnLeaveEsoIcon);
 		$(".esovsCraftedAbility .esovsSkillBarIcon").hover(OnHoverEsoSkillBarIcon, OnLeaveEsoSkillBarIcon);
+		
+		/* AddEsoCraftedSkills() replaces DOM after esovsOnDocReady — those icons never got jQuery UI draggable. */
+		$(".esovsCraftedAbility .esovsAbilityBlockIcon").each(function () {
+			var $icon = $(this);
+			try {
+				if ($icon.data("ui-draggable")) $icon.draggable("destroy");
+			} catch (e) { }
+			$icon.draggable({
+				containment: false,
+				appendTo: $("body"),
+				helper: "clone",
+				start: OnSkillBarDraggableStart,
+				classes: { },
+			});
+		});
 	}
 	
 	$(".esovsAbilityScript").click(OnEsoScriptBlockClick);

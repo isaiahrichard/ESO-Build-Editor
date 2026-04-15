@@ -2204,7 +2204,7 @@ window.GetEsoSkillDescription2 = function(abilityId, inputValues, useHtml, noEff
 	skillData.lastDesc = output;
 	skillData.lastRawDesc = rawDesc;
 	
-	if (skillData.useCraftedDesc === true) return GetEsoCraftedSkillDescription2(abilityId, skillData, inputValues, useHtml, noEffectLines, outputRaw)
+	if (skillData.useCraftedDesc) return GetEsoCraftedSkillDescription2(abilityId, skillData, inputValues, useHtml, noEffectLines, outputRaw);
 	return output;
 }
 

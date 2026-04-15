@@ -41,6 +41,8 @@ $esoLocalUespCdnProxy = getenv('ESO_LOCAL_UESP_CDN_PROXY') === '1';
 		<script src="resources/json2.js"></script>
 		<script src="/_esolog_res/esoitemlink.js"></script>
 		<script src="/_esolog_res/esoskills.js"></script>
+		<!-- Crafted/scribed tooltips: GetEsoSkillDescription2 + GetEsoCraftedSkillDescription2 (matches esoskills_template.txt) -->
+		<script src="/_esolog_res/esoSkillTooltips.js"></script>
 		<script src="/_esolog_res/esocp_simple.js"></script>
 		<script type="text/javascript" src="resources/esobuilddata.js"></script>
 		<!-- Character-data item tooltips (ShowEsoItemLinkPopup, OnEsoItemLinkEnter); not the same as esolog esoitemlink.js -->

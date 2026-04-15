@@ -10110,6 +10110,11 @@ window.CreateEsoBuildSaveDataForSkill = function (saveData, abilityData, skillDa
 	data.scriptId1 = abilityData.scriptId1;
 	data.scriptId2 = abilityData.scriptId2;
 	data.scriptId3 = abilityData.scriptId3;
+	var sc1 = abilityData.scriptId1;
+	var sc2 = abilityData.scriptId2;
+	var sc3 = abilityData.scriptId3;
+	if ((sc1 != null && sc1 !== "") || (sc2 != null && sc2 !== "") || (sc3 != null && sc3 !== ""))
+		data.craftData = (sc1 != null && sc1 !== "" ? sc1 : "") + "," + (sc2 != null && sc2 !== "" ? sc2 : "") + "," + (sc3 != null && sc3 !== "" ? sc3 : "");
 	
 	data.description = GetEsoSkillDescription(abilityId, null, false, true, true);
 	data.cost = GetEsoSkillCost(abilityId);
@@ -10962,6 +10967,109 @@ window.EsoApplyLocalSavedataEquipSlotsAsync = function (equipSlots, onDone)
 };
 
 
+/**
+ * After race/class change, re-apply SubclassN / SubclassSkillLineN from saved stats onto skill tree titles
+ * (stats are not bound to statid inputs, so EsoApplyLocalSaveDataStatToDom never touches them).
+ * Mirrors EsoBuildApplySubclassSwap / EsoBuildResetSubclassSlot so the Skills tab shows donor line names,
+ * correct skilllineid, visible skill blocks, and native-line reset — not only the Subclass tab.
+ */
+window.EsoBuildApplySavedSubclassLinesFromStats = function (stats)
+{
+	if (stats == null || typeof stats !== "object") return;
+	for (var s = 1; s <= 3; s++)
+	{
+		var k1 = "Subclass" + s;
+		var k2 = "SubclassSkillLine" + s;
+		if (!Object.prototype.hasOwnProperty.call(stats, k1) && !Object.prototype.hasOwnProperty.call(stats, k2)) continue;
+		var $title = $("#esovsSkillTree .esovsSkillTypeActiveClass .esovsSkillLineTitle[skilllineindex='" + s + "']");
+		if ($title.length === 0) continue;
+		var v1 = stats[k1];
+		var v2 = stats[k2];
+		if (v1 != null && typeof v1 === "object" && v1.value != null) v1 = v1.value;
+		if (v2 != null && typeof v2 === "object" && v2.value != null) v2 = v2.value;
+		v1 = v1 != null ? String(v1) : "";
+		v2 = v2 != null ? String(v2) : "";
+		if (v1 === "" && v2 === "")
+		{
+			var curLine = $title.attr("skilllineid");
+			var origLine = $title.attr("origskilllineid");
+			if (origLine != null && curLine != null && curLine !== origLine && typeof EsoBuildResetSubclassSlot === "function")
+				EsoBuildResetSubclassSlot(s);
+			else
+			{
+				$title.attr("subclass", "");
+				$title.attr("subclassid", "");
+			}
+			continue;
+		}
+		var oldLineId = $title.attr("skilllineid");
+		$title.attr("subclassid", v2);
+		$title.attr("subclass", v1);
+		$title.attr("skilllineid", v2);
+		$title.text(v2);
+		if (s === 1)
+		{
+			g_EsoBuildSubclassData.Subclass1 = v1;
+			g_EsoBuildSubclassData.SubclassSkillLine1 = v2;
+		}
+		else if (s === 2)
+		{
+			g_EsoBuildSubclassData.Subclass2 = v1;
+			g_EsoBuildSubclassData.SubclassSkillLine2 = v2;
+		}
+		else if (s === 3)
+		{
+			g_EsoBuildSubclassData.Subclass3 = v1;
+			g_EsoBuildSubclassData.SubclassSkillLine3 = v2;
+		}
+		if (typeof EsoResetSkillLine === "function")
+			EsoResetSkillLine(oldLineId, true);
+		$(".esovsSkillLineTitleHighlight").removeClass("esovsSkillLineTitleHighlight");
+		$title.addClass("esovsSkillLineTitleHighlight");
+		if (typeof EsoSkillShowSkillLine === "function")
+			EsoSkillShowSkillLine(v2);
+		if (typeof EsoBuildFinishSubclassLineUpdates === "function")
+			EsoBuildFinishSubclassLineUpdates();
+	}
+};
+
+
+/**
+ * Restore scribed script picks into g_EsoCraftedSkills and refresh crafted blocks (local JSON load).
+ */
+window.EsoBuildApplySavedCraftedScriptsFromSkills = function (skills)
+{
+	if (skills == null || typeof skills !== "object" || window.g_EsoCraftedSkills == null) return;
+	for (var craftedId in g_EsoCraftedSkills)
+	{
+		if (!Object.prototype.hasOwnProperty.call(g_EsoCraftedSkills, craftedId)) continue;
+		var crafted = g_EsoCraftedSkills[craftedId];
+		var aid = parseInt(crafted.abilityId, 10);
+		if (isNaN(aid) || aid <= 0) continue;
+		var saved = skills[aid];
+		if (saved == null) saved = skills[String(aid)];
+		if (saved == null) continue;
+		var id1 = saved.scriptId1 != null && saved.scriptId1 !== "" ? parseInt(saved.scriptId1, 10) : NaN;
+		var id2 = saved.scriptId2 != null && saved.scriptId2 !== "" ? parseInt(saved.scriptId2, 10) : NaN;
+		var id3 = saved.scriptId3 != null && saved.scriptId3 !== "" ? parseInt(saved.scriptId3, 10) : NaN;
+		if (saved.craftData != null && saved.craftData !== "")
+		{
+			var parts = String(saved.craftData).split(",");
+			if (isNaN(id1) || id1 <= 0) id1 = parseInt(parts[0], 10);
+			if (isNaN(id2) || id2 <= 0) id2 = parseInt(parts[1], 10);
+			if (isNaN(id3) || id3 <= 0) id3 = parseInt(parts[2], 10);
+		}
+		if (!isNaN(id1) && id1 > 0) crafted.scriptId1 = id1;
+		if (!isNaN(id2) && id2 > 0) crafted.scriptId2 = id2;
+		if (!isNaN(id3) && id3 > 0) crafted.scriptId3 = id3;
+		if (typeof UpdateEsoCraftedSkillData === "function")
+			UpdateEsoCraftedSkillData(crafted);
+	}
+	if (typeof AddEsoCraftedSkills === "function")
+		AddEsoCraftedSkills();
+};
+
+
 window.EsoLocalSavedataStatKeyToDomStatId = function (statKey)
 {
 	if (statKey == null) return statKey;
@@ -11069,7 +11177,9 @@ window.ApplyEsoLocalBuildSaveData = function (saveData)
 	$("#esotbRace").trigger("change");
 	$("#esotbClass").trigger("change");
 
+	EsoBuildApplySavedSubclassLinesFromStats(saveData.Stats);
 	SyncLocalSavedataSkillBlocksViaPurchase(saveData.Skills);
+	EsoBuildApplySavedCraftedScriptsFromSkills(saveData.Skills);
 
 	EsoApplyLocalSavedataBuffs(saveData.Buffs);
 	SyncEsoBuffCheckboxesFromBuffData();

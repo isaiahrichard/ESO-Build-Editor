@@ -379,6 +379,7 @@ class CEsoViewSkills
 		{
 			$this->UpdateEsoCraftedSkillData($craftedSkill);
 		}
+		unset($craftedSkill);
 	}
 	
 	
@@ -1138,19 +1139,56 @@ class CEsoViewSkills
 	}
 	
 	
+	/**
+	 * Character activeData is keyed by FindBaseAbilityForActiveData() (morph chain root), not always the
+	 * grimoire id in craftedSkills.abilityId — find the row that belongs to this scribed skill.
+	 */
+	private function findActiveDataForCraftedGrimoire($grimoireAbilityId)
+	{
+		$grimoireAbilityId = intval($grimoireAbilityId);
+		if ($grimoireAbilityId <= 0 || !is_array($this->activeData)) return null;
+		if (array_key_exists($grimoireAbilityId, $this->activeData))
+			return $this->activeData[$grimoireAbilityId];
+		foreach ($this->activeData as $key => $ad)
+		{
+			if (!is_array($ad)) continue;
+			$k = intval($key);
+			if ($k === $grimoireAbilityId) return $ad;
+			$bid = isset($ad['baseAbilityId']) ? intval($ad['baseAbilityId']) : 0;
+			$aid = isset($ad['abilityId']) ? intval($ad['abilityId']) : 0;
+			if ($bid === $grimoireAbilityId || $aid === $grimoireAbilityId) return $ad;
+			if ($aid > 0)
+			{
+				$base = intval($this->FindBaseAbilityForActiveData($aid));
+				if ($base === $grimoireAbilityId) return $ad;
+			}
+		}
+		return null;
+	}
+	
+	
 	public function UpdateEsoCraftedSkillData(&$craftedSkill)
 	{
 		$craftId = intval($craftedSkill['id']);
 		$abilityId = intval($craftedSkill['abilityId']);
-		$activeData = (is_array($this->activeData) && array_key_exists($abilityId, $this->activeData))
-			? $this->activeData[$abilityId]
-			: null;
+		$activeData = $this->findActiveDataForCraftedGrimoire($abilityId);
 		
 		if ($activeData)
 		{
-			if ($activeData['scriptId1']) $craftedSkill['scriptId1'] = $activeData['scriptId1'];
-			if ($activeData['scriptId2']) $craftedSkill['scriptId2'] = $activeData['scriptId2'];
-			if ($activeData['scriptId3']) $craftedSkill['scriptId3'] = $activeData['scriptId3'];
+			if (isset($activeData['scriptId1']) && $activeData['scriptId1'] !== '' && $activeData['scriptId1'] !== null)
+				$craftedSkill['scriptId1'] = $activeData['scriptId1'];
+			if (isset($activeData['scriptId2']) && $activeData['scriptId2'] !== '' && $activeData['scriptId2'] !== null)
+				$craftedSkill['scriptId2'] = $activeData['scriptId2'];
+			if (isset($activeData['scriptId3']) && $activeData['scriptId3'] !== '' && $activeData['scriptId3'] !== null)
+				$craftedSkill['scriptId3'] = $activeData['scriptId3'];
+			if ((!isset($craftedSkill['scriptId1']) || $craftedSkill['scriptId1'] === '' || $craftedSkill['scriptId1'] === null)
+				&& !empty($activeData['craftData']))
+			{
+				$parts = explode(',', $activeData['craftData']);
+				if (count($parts) >= 1 && $parts[0] !== '') $craftedSkill['scriptId1'] = $parts[0];
+				if (count($parts) >= 2 && $parts[1] !== '') $craftedSkill['scriptId2'] = $parts[1];
+				if (count($parts) >= 3 && $parts[2] !== '') $craftedSkill['scriptId3'] = $parts[2];
+			}
 			$classId = GetEsoClassIdFromText($this->displayClass);
 			$craftedSkill['classId'] = $classId;
 			//error_log("Updating Active Data for $abilityId : {$craftedSkill['scriptId1']}");
@@ -1397,17 +1435,29 @@ class CEsoViewSkills
 		$selSlot2 = $craftedSkill['scriptId2'];
 		$selSlot3 = $craftedSkill['scriptId3'];
 		
-		$activeData = $this->activeData[$id];
+		/* activeData is keyed by morph base for some skills; use same lookup as UpdateEsoCraftedSkillData. */
+		$activeData = $this->findActiveDataForCraftedGrimoire($id);
 		
 		if ($activeData)
 		{
-			if ($activeData['scriptId1']) $selSlot1 = $activeData['scriptId1'];
-			if ($activeData['scriptId2']) $selSlot2 = $activeData['scriptId2'];
-			if ($activeData['scriptId3']) $selSlot3 = $activeData['scriptId3'];
+			if (isset($activeData['scriptId1']) && $activeData['scriptId1'] !== '' && $activeData['scriptId1'] !== null)
+				$selSlot1 = $activeData['scriptId1'];
+			if (isset($activeData['scriptId2']) && $activeData['scriptId2'] !== '' && $activeData['scriptId2'] !== null)
+				$selSlot2 = $activeData['scriptId2'];
+			if (isset($activeData['scriptId3']) && $activeData['scriptId3'] !== '' && $activeData['scriptId3'] !== null)
+				$selSlot3 = $activeData['scriptId3'];
+			$cdFallback = isset($activeData['craftData']) ? trim((string) $activeData['craftData']) : '';
+			if ($cdFallback !== '')
+			{
+				$parts = explode(',', $cdFallback);
+				if (($selSlot1 === '' || $selSlot1 === null) && count($parts) >= 1 && $parts[0] !== '') $selSlot1 = $parts[0];
+				if (($selSlot2 === '' || $selSlot2 === null) && count($parts) >= 2 && $parts[1] !== '') $selSlot2 = $parts[1];
+				if (($selSlot3 === '' || $selSlot3 === null) && count($parts) >= 3 && $parts[2] !== '') $selSlot3 = $parts[2];
+			}
 			$output .= "<!-- $selSlot1 / $selSlot2 / $selSlot3 -->";
 		}
 		else {
-			$output .= "<!-- No Active Dataa for $id -->";
+			$output .= "<!-- No Active Data for $id -->";
 		}
 		
 		$output .= '<div class="esovsAbilityBlockList" craftedid="' . $craftedId . '" style="display: none;">';

@@ -3580,13 +3580,15 @@ class EsoBuildDataEditor
 			else if ($type == "ultimate")
 				$data['abilityType'] = "Ultimate";
 			
-			if ($skillData['craftData'])
+			/* Do not use empty(craftData): empty("0") is true in PHP, which drops valid scribe configs like "0,31,5". */
+			$craftDataRaw = array_key_exists('craftData', $skillData) ? trim((string) $skillData['craftData']) : '';
+			if ($craftDataRaw !== '')
 			{
-				$scriptIds = explode(",", $skillData['craftData']);
-				$data['craftData'] = $skillData['craftData'];
-				if ($scriptIds[0]) $data['scriptId1'] = $scriptIds[0];
-				if ($scriptIds[1]) $data['scriptId2'] = $scriptIds[1];
-				if ($scriptIds[2]) $data['scriptId3'] = $scriptIds[2];
+				$scriptIds = explode(",", $craftDataRaw);
+				$data['craftData'] = $craftDataRaw;
+				if (array_key_exists(0, $scriptIds) && $scriptIds[0] !== '') $data['scriptId1'] = $scriptIds[0];
+				if (array_key_exists(1, $scriptIds) && $scriptIds[1] !== '') $data['scriptId2'] = $scriptIds[1];
+				if (array_key_exists(2, $scriptIds) && $scriptIds[2] !== '') $data['scriptId3'] = $scriptIds[2];
 			}
 			
 			if ($type == "passive")

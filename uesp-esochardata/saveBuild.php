@@ -417,23 +417,34 @@ class EsoBuildDataSaver
 	public function MergeStats()
 	{
 		if ($this->parsedBuildData == null) return true;
-		if ($this->statsData == null) return true;
 		if ($this->parsedBuildData['Stats'] === null) $this->parsedBuildData['Stats'] = array();
 		
-		foreach ($this->statsData as $name => $value)
+		/* Existing DB stats fill in keys missing from the incoming save (edit mode only). */
+		if ($this->statsData != null)
 		{
-			if (!array_key_exists($name, $this->parsedBuildData['Stats']))
+			foreach ($this->statsData as $name => $value)
 			{
-				$this->parsedBuildData['Stats'][$name] = $value;
+				if (!array_key_exists($name, $this->parsedBuildData['Stats']))
+				{
+					$this->parsedBuildData['Stats'][$name] = $value;
+				}
 			}
 		}
 		
-		foreach ($this->parsedBuildData['Skills'] as $id => &$skill)
+		/* skills.craftData column is required for scribed skills; client sends scriptId1–3. Must run for new saves (statsData null). */
+		if (!empty($this->parsedBuildData['Skills']) && is_array($this->parsedBuildData['Skills']))
 		{
-			if ($skill['scriptId1'] || $skill['scriptId2'] || $skill['scriptId3'])
+			foreach ($this->parsedBuildData['Skills'] as $id => &$skill)
 			{
-				$this->parsedBuildData['Skills'][$id]['craftData'] = $skill['scriptId1'] . "," . $skill['scriptId2'] . "," . $skill['scriptId3'];
+				if (!is_array($skill)) continue;
+				if (array_key_exists('craftData', $skill) && $skill['craftData'] !== null && $skill['craftData'] !== '') continue;
+				$s1 = array_key_exists('scriptId1', $skill) ? $skill['scriptId1'] : '';
+				$s2 = array_key_exists('scriptId2', $skill) ? $skill['scriptId2'] : '';
+				$s3 = array_key_exists('scriptId3', $skill) ? $skill['scriptId3'] : '';
+				if ($s1 !== '' && $s1 !== null || $s2 !== '' && $s2 !== null || $s3 !== '' && $s3 !== null)
+					$skill['craftData'] = $s1 . "," . $s2 . "," . $s3;
 			}
+			unset($skill);
 		}
 		
 		return true;
